@@ -60,6 +60,7 @@ void update_button(Button* button) {
 
 void draw_button(Button* button) {
     DrawRectangleRounded(button->rect, 0.3f, 10, button->render_color);
+    DrawTextEx(GetFontDefault(), button->text, button->text_pos, 20.0f, 2.0f, WHITE);
 }
 
 void ui_buttons_update(void) {

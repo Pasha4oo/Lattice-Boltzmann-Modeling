@@ -66,7 +66,7 @@ int main(void)
     uint32_t* pixels = (uint32_t*)malloc(Nx * Ny * sizeof(uint32_t));
 
     create_button((Rectangle) { Nx + 50, 50, 80, 50 }, 0.4f, ORANGE, "Text", BLUE, BUTTON_START);
-    create_button((Rectangle) { Nx + 50, 190, 80, 50 }, 0.4f, RED, "Text", BLUE, BUTTON_START);
+    create_button((Rectangle) { Nx + 50, 190, 80, 50 }, 0.4f, RED, "RESET", BLUE, BUTTON_START);
 
     double max_v = 1e-12;
     float timer = 0.0f;
