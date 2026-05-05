@@ -1,0 +1,38 @@
+﻿#pragma once
+
+#include <raylib.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX_BUTTONS 32
+
+typedef enum ButtonID {
+	BUTTON_START
+} ButtonID;
+
+typedef struct Button {
+	Rectangle rect;
+	float roundness;
+	Color base_color;
+	Color render_color;
+	Color target;
+	const char* text;
+	Vector2 text_pos;
+	float text_width;
+	bool pressed;
+	ButtonID id;
+	float press_timer;
+} Button;
+
+typedef struct UIButtons {
+	Button buttons[MAX_BUTTONS];
+	int counter;
+} UIButtons;
+
+Button create_button(Rectangle rect, float rect_roundness, Color rect_color, const char* text, Color text_color, ButtonID id);
+
+void update_button(Button* button);
+void draw_button(Button* button);
+void ui_buttons_update(void);
+void ui_buttons_draw(void);

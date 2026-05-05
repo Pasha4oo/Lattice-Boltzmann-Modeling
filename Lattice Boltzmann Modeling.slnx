@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="../../../../../../../../Code/Lattice Boltzmann Modeling/Lattice Boltzmann Modeling.vcxproj" Id="a6bda8ae-8a23-45d6-884b-66b3e31c9787" />
+</Solution>
