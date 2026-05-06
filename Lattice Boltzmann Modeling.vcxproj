@@ -137,6 +137,7 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="math_calculations.c" />
     <ClCompile Include="ui.c" />
+    <ClCompile Include="walls.c" />
     <ClCompile Include="window.c" />
   </ItemGroup>
   <ItemGroup>
@@ -146,6 +147,7 @@
     <ClInclude Include="consts.h" />
     <ClInclude Include="math_calculations.h" />
     <ClInclude Include="ui.h" />
+    <ClInclude Include="walls.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

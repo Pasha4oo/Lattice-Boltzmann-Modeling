@@ -9,6 +9,7 @@
 #include "window.h"
 #include "math_calculations.h"
 #include "ui.h"
+#include "walls.h"
 
 int main(void)
 {
@@ -26,24 +27,12 @@ int main(void)
     //push_liquid(F, 3);
     // push_liquid(F, 5);
 
-    bool* walls = malloc(Ny * Nx * sizeof(bool));
-    /*  for (int i = 0; i < Ny * Nx; i++) {
-          if (i < Nx || i > (Ny - 1) * Nx || i % Nx == 0 || i % Nx == Nx - 1) {
-              walls[i] = true;
-          }
-          else {
-              walls[i] = false;
-          }
-      }*/
+    init_walls();
 
-    for (int i = 0; i < Ny * Nx; i++) {
-        walls[i] = false;
-    }
-
-    set_cylinder_wall(walls, Nx / 2, Ny / 4, F);
-    set_cylinder_wall(walls, Nx / 2, Ny / 3, F);
-    set_cylinder_wall(walls, Nx / 2, Ny / 2, F);
-    set_cylinder_wall(walls, Nx / 2 + 30, Ny, F);
+    //set_cylinder_wall(walls, Nx / 2, Ny / 4, F);
+    //set_cylinder_wall(walls, Nx / 2, Ny / 3, F);
+    set_circle_wall((Vector2) { Nx / 2, Ny / 2 }, 60);
+    //set_cylinder_wall(walls, Nx / 2 + 180, Ny, F);
 
     //for (int it = 0; it < Nt; it++) {
     //    //printf("%d\n", it);
@@ -58,6 +47,8 @@ int main(void)
 
     InitWindow(WINDOW_WIDTH, WINDOW_LENGTH, "LBM");
 
+    SetExitKey(KEY_NULL);
+
     SetTargetFPS(0);
 
     Image image = GenImageColor(Nx, Ny, BLACK);
@@ -65,8 +56,12 @@ int main(void)
 
     uint32_t* pixels = (uint32_t*)malloc(Nx * Ny * sizeof(uint32_t));
 
-    create_button((Rectangle) { Nx + 50, 50, 80, 50 }, 0.4f, ORANGE, "Text", BLUE, BUTTON_START);
+    create_button((Rectangle) { Nx + 50, 50, 80, 50 }, 0.4f, ORANGE, "CIRCLE", BLUE, BUTTON_WALL_CIRCLE);
     create_button((Rectangle) { Nx + 50, 190, 80, 50 }, 0.4f, RED, "RESET", BLUE, BUTTON_START);
+    create_button((Rectangle) { Nx + 50, 290, 80, 50 }, 0.4f, RED, "FREE", BLUE, BUTTON_WALL_FREE);
+    create_button((Rectangle) { Nx + 50, 390, 80, 50 }, 0.4f, RED, "LINE", BLUE, BUTTON_WALL_LINE);
+    create_button((Rectangle) { Nx + 50, 450, 80, 50 }, 0.4f, RED, "ERASE", BLUE, BUTTON_WALL_ERASER);
+    create_button((Rectangle) { Nx + 50, 550, 80, 50 }, 0.4f, RED, "POLY", BLUE, BUTTON_WALL_POLY);
 
     double max_v = 1e-12;
     float timer = 0.0f;
@@ -75,7 +70,7 @@ int main(void)
 
     while (!WindowShouldClose())
     {
-        calculate(walls, F, F_next);
+        calculate(F, F_next);
 
         timer += GetFrameTime();
 
@@ -105,6 +100,7 @@ int main(void)
             DrawText(TextFormat("FPS: %i", GetFPS()), 10, 10, 20, DARKGRAY);
             
             ui_buttons_draw();
+            walls_draw();
         EndDrawing();
 
         //float mouseWheel = GetMouseWheelMove();
@@ -115,12 +111,7 @@ int main(void)
         //    SetTargetFPS(currentFps);
         //}
 
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        {
-            Vector2 position = GetMousePosition();
-            set_cylinder_wall(walls, position.x, position.y, F);
-        }
-
+        walls_update();
         //update_speed_pixels();
 
         //BeginDrawing();

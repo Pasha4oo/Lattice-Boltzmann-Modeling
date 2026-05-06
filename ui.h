@@ -8,7 +8,12 @@
 #define MAX_BUTTONS 32
 
 typedef enum ButtonID {
-	BUTTON_START
+	BUTTON_START,
+	BUTTON_WALL_CIRCLE,
+	BUTTON_WALL_LINE,
+	BUTTON_WALL_FREE,
+	BUTTON_WALL_POLY,
+	BUTTON_WALL_ERASER
 } ButtonID;
 
 typedef struct Button {

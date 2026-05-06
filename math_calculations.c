@@ -10,10 +10,7 @@
 
 #include "math_calculations.h"
 #include "consts.h"
-
-double distance(double x1, double y1, double x2, double y2) {
-	return sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
-}
+#include "walls.h"
 
 double randn(void) {
 	double u1 = (double)rand() / RAND_MAX;
@@ -49,18 +46,23 @@ double randn(void) {
 //	fclose(f);
 //}
 
-void calculate(bool* walls, double* F, double* F_next) {
+void calculate(double* F, double* F_next) {
 	int x, y, i;
 	#pragma omp parallel for private(x, y, i) collapse(2)
 	for (y = 0; y < Ny; y++) {
 		for (x = 0; x < Nx; x++) {
 			for (i = 0; i < NL; i++) {
 				int next_x = (x + cxs[i]);
+				/*int next_y = y + cys[i];*/
 				int next_y = (y + cys[i] + Ny) % Ny; //Closed System
 
 				if (next_x >= 0 && next_x < Nx) {
 					F_next[(next_y * Nx + next_x) * NL + i] = F[(y * Nx + x) * NL + i];
 				}
+
+				/*if (next_x >= 0 && next_x < Nx && next_y >= 0 && next_y < Ny) {
+					F_next[(next_y * Nx + next_x) * NL + i] = F[(y * Nx + x) * NL + i];
+				}*/
 
 				//int next_x = x + cxs[i];
 				//int next_y = y + cys[i];
@@ -98,12 +100,6 @@ void calculate(bool* walls, double* F, double* F_next) {
 				double rho = (F_next[idx + 0] + F_next[idx + 2] + F_next[idx + 4] +
 					2.0 * (F_next[idx + 3] + F_next[idx + 6] + F_next[idx + 7])) / (1.0 - u_in);
 			}*/
-			else if (x == Nx - 1) {
-				int idx_left = (y * Nx + (Nx - 2)) * NL;
-				for (i = 0; i < NL; i++) {
-					F[(y * Nx + (Nx - 1)) * NL + i] = F_next[idx_left + i];
-				}
-			}
 			else if (x == 0) {
 				double u_in = 0.07;              
 				int idx = (y * Nx + 0) * NL;
@@ -119,6 +115,24 @@ void calculate(bool* walls, double* F, double* F_next) {
 						(1.0 + 3.0 * cu + 4.5 * cu * cu - 1.5 * u2);
 				}
 			}
+			else if (x == Nx - 1) {
+				int idx_left = (y * Nx + (Nx - 2)) * NL;
+				for (i = 0; i < NL; i++) {
+					F[(y * Nx + (Nx - 1)) * NL + i] = F_next[idx_left + i];
+				}
+			}
+			/*else if (y == Ny - 1) {
+				int idx_below = ((Ny - 2) * Nx + x) * NL;
+				for (i = 0; i < NL; i++) {
+					F[((Ny - 1) * Nx + x) * NL + i] = F_next[idx_below + i];
+				}
+			}
+			else if (y == 0) {
+				int idx_above = (1 * Nx + x) * NL;
+				for (i = 0; i < NL; i++) {
+					F[(0 * Nx + x) * NL + i] = F_next[idx_above + i];
+				}
+			}*/
 			else {
 				for (i = 0; i < NL; i++) {
 					F[(y * Nx + x) * NL + i] = F_next[(y * Nx + x) * NL + i];
@@ -163,20 +177,6 @@ void calculate(bool* walls, double* F, double* F_next) {
 					);
 
 				F[cellOffset + i] = F[cellOffset + i] - (1.0 / tau) * (F[cellOffset + i] - feq);
-			}
-		}
-	}
-}
-
-void set_cylinder_wall(bool* walls, int pos_x, int pos_y, double* F) {
-	for (int x = 0; x < Nx; x++) {
-		for (int y = 0; y < Ny; y++) {
-			if (distance(pos_x, pos_y, x, y) < 60) {
-				walls[y * Nx + x] = true;
-				//for (int i = 0; i < NL; i++) {
-				//	F[(y * Nx + x) * NL + i] = weights[i] * 1; // ρ = 1
-				//}
-				//[y * Nx + x] = 1.0 + 0.01 * randn();
 			}
 		}
 	}
