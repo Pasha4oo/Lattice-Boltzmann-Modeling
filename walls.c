@@ -1,9 +1,13 @@
 ﻿#include "walls.h"
+#include "consts.h"
 
 WallType wall_type = WALL_NONE;
 bool* walls = NULL;
 Vector2 first_wall_line_pos = { -1, -1 };
 Color walls_color = { 255, 255, 150, 255 };
+
+int WALLS_BASE_LENGTH = 0;
+int WALLS_BASE_HIGHT = 60;
 
 double distance(double x1, double y1, double x2, double y2) {
 	return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -11,6 +15,9 @@ double distance(double x1, double y1, double x2, double y2) {
 
 void walls_update(void) {
 	Vector2 mouse = GetMousePosition();
+
+	mouse.x -= 50;
+	mouse.y -= 25;
 
 	if (IsKeyPressed(KEY_ESCAPE)) {
 		wall_type = WALL_NONE;
@@ -74,6 +81,8 @@ void walls_draw(void) {
 }
 
 void init_walls(void) {
+	free(walls);
+
 	walls = malloc(Ny * Nx * sizeof(bool));
 
 	//for (int i = 0; i < Ny * Nx; i++) {

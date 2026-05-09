@@ -7,7 +7,7 @@
 extern const int Nx;
 extern const int Ny;
 extern const int WINDOW_WIDTH;
-extern const int WINDOW_LENGTH;
+extern const int WINDOW_HEIGHT;
 extern const double tau;
 
 extern const int Nt;

@@ -2,8 +2,8 @@
 
 const int Nx = 800;
 const int Ny = 400;
-const int WINDOW_WIDTH = 1000;
-const int WINDOW_LENGTH = 600;
+const int WINDOW_WIDTH = 1100;
+const int WINDOW_HEIGHT = 710;
 
 const double tau = .57; //0.53
 

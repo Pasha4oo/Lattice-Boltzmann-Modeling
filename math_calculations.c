@@ -12,6 +12,24 @@
 #include "consts.h"
 #include "walls.h"
 
+double* F = NULL;
+double* F_next = NULL;
+
+void init_F() {
+	free(F);
+	free(F_next);
+
+	F = malloc(Ny * Nx * NL * sizeof(double));
+	F_next = malloc(Ny * Nx * NL * sizeof(double));
+
+	if (F == NULL || F_next == NULL) return;
+
+	for (int i = 0; i < Ny * Nx * NL; i++) {
+		F[i] = 1.0 + 0.01 * randn();
+		F_next[i] = 0.0;
+	}
+}
+
 double randn(void) {
 	double u1 = (double)rand() / RAND_MAX;
 	double u2 = (double)rand() / RAND_MAX;

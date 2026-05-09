@@ -1,5 +1,6 @@
 ﻿#include "ui.h"
 #include "walls.h"
+#include "math_calculations.h"
 
 static UIButtons ui_buttons = { 0 };
 static Vector2 mouse;
@@ -72,11 +73,13 @@ void ui_buttons_update(void) {
         if (ui_buttons.buttons[i].pressed) {
             switch (ui_buttons.buttons[i].id) {
                 case BUTTON_START:           printf("1234"); break;
+                case BUTTON_RESTART_LIQUID:  init_F(); break;
                 case BUTTON_WALL_CIRCLE:     wall_type = WALL_CIRCLE; break;
                 case BUTTON_WALL_LINE:       wall_type = WALL_LINE; break;
                 case BUTTON_WALL_FREE:       wall_type = WALL_FREE; break;
                 case BUTTON_WALL_POLY:       wall_type = WALL_POLY; break;
                 case BUTTON_WALL_ERASER:       wall_type = WALL_ERASER; break;
+                case BUTTON_WALL_CLEAR:       init_walls(); break;
             }
 
             ui_buttons.buttons[i].pressed = false;

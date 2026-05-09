@@ -17,12 +17,7 @@ int main(void)
 
     init_openmp();
 
-    double* F = malloc(Ny * Nx * NL * sizeof(double));
-    double* F_next = malloc(Ny * Nx * NL * sizeof(double));
-
-    for (int i = 0; i < Ny * Nx * NL; i++) {
-        F[i] = 1.0 + 0.01 * randn();
-    }
+    init_F();
 
     //push_liquid(F, 3);
     // push_liquid(F, 5);
@@ -45,7 +40,7 @@ int main(void)
     //    //}
     //}
 
-    InitWindow(WINDOW_WIDTH, WINDOW_LENGTH, "LBM");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LBM");
 
     SetExitKey(KEY_NULL);
 
@@ -56,12 +51,13 @@ int main(void)
 
     uint32_t* pixels = (uint32_t*)malloc(Nx * Ny * sizeof(uint32_t));
 
-    create_button((Rectangle) { Nx + 50, 50, 80, 50 }, 0.4f, ORANGE, "CIRCLE", BLUE, BUTTON_WALL_CIRCLE);
-    create_button((Rectangle) { Nx + 50, 190, 80, 50 }, 0.4f, RED, "RESET", BLUE, BUTTON_START);
-    create_button((Rectangle) { Nx + 50, 290, 80, 50 }, 0.4f, RED, "FREE", BLUE, BUTTON_WALL_FREE);
-    create_button((Rectangle) { Nx + 50, 390, 80, 50 }, 0.4f, RED, "LINE", BLUE, BUTTON_WALL_LINE);
-    create_button((Rectangle) { Nx + 50, 450, 80, 50 }, 0.4f, RED, "ERASE", BLUE, BUTTON_WALL_ERASER);
-    create_button((Rectangle) { Nx + 50, 550, 80, 50 }, 0.4f, RED, "POLY", BLUE, BUTTON_WALL_POLY);
+    create_button((Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "CIRCLE", BLUE, BUTTON_WALL_CIRCLE);
+    create_button((Rectangle) { Nx + 130, 190, 80, 50 }, 0.4f, RED, "RESET", BLUE, BUTTON_RESTART_LIQUID);
+    create_button((Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "FREE", BLUE, BUTTON_WALL_FREE);
+    create_button((Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "LINE", BLUE, BUTTON_WALL_LINE);
+    create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, BLUE, "ERASE", BLUE, BUTTON_WALL_ERASER);
+    create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "POLY", BLUE, BUTTON_WALL_POLY);
+    create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, RED, "CLEAR", BLUE, BUTTON_WALL_CLEAR);
 
     double max_v = 1e-12;
     float timer = 0.0f;
@@ -95,10 +91,15 @@ int main(void)
         ui_buttons_update();
 
         BeginDrawing();
-            ClearBackground(RAYWHITE);
-            DrawTexture(texture, 0, 0, WHITE);
+            ClearBackground((Color) { 172, 155, 135, 255 });
+            DrawRectangleRounded((Rectangle) { 20, 10, Nx + 45, Ny + 30 }, 0.1f, 5, DARKBROWN);
+            DrawRectangleRounded((Rectangle) { 35, 10, Nx + 30, Ny + 30 }, 0.1f, 5, BROWN);
+            DrawTexture(texture, 50, 25, WHITE);
             DrawText(TextFormat("FPS: %i", GetFPS()), 10, 10, 20, DARKGRAY);
             
+            DrawRectangleRounded((Rectangle) { 20 + WALLS_BASE_LENGTH, Ny + 10 + WALLS_BASE_HIGHT, 315, 190 }, 0.1f, 5, DARKBROWN);
+            DrawRectangleRounded((Rectangle) { 35 + WALLS_BASE_LENGTH, Ny + 10 + WALLS_BASE_HIGHT, 300, 180 }, 0.1f, 5, BROWN);
+            DrawText("Walls", 280 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 15, RAYWHITE);
             ui_buttons_draw();
             walls_draw();
         EndDrawing();

@@ -22,6 +22,9 @@ extern bool* walls;
 extern WallType wall_type;
 extern Color walls_color;
 
+extern int WALLS_BASE_LENGTH;
+extern int WALLS_BASE_HIGHT;
+
 double distance(double x1, double y1, double x2, double y2);
 void init_walls(void);
 void walls_update(void);
