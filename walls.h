@@ -32,3 +32,6 @@ void walls_draw(void);
 void set_line_wall(Vector2 first_pos, Vector2 second_pos);
 void set_circle_wall(Vector2 pos, int radius);
 void walls_eraser(Vector2 pos, int radius);
+void load_walls_bmp();
+void load_walls_pwal();
+void save_walls_pwal();

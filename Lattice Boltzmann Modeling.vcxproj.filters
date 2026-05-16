@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="math_calculations.c">
+    <ClCompile Include="flow.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="window.c">
@@ -33,6 +33,12 @@
     <ClCompile Include="walls.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="settings.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="files.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -41,7 +47,7 @@
     <ClInclude Include="consts.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="math_calculations.h">
+    <ClInclude Include="flow.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="window.h">
@@ -51,6 +57,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="walls.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="files.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

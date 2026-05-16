@@ -1,5 +1,6 @@
 ﻿#include "walls.h"
 #include "consts.h"
+#include "files.h"
 
 WallType wall_type = WALL_NONE;
 bool* walls = NULL;
@@ -140,5 +141,33 @@ void walls_eraser(Vector2 pos, int radius) {
 				walls[y * Nx + x] = false;
 			}
 		}
+	}
+}
+
+void load_walls_bmp() {
+	char path[260] = "";
+
+	if (get_open_path("Select Walls BMP Map (*.bmp)\0*.bmp\0All Files (*.*)\0*.*\0", "bmp", path, sizeof(path))) {
+		load_bmp(path, walls, Nx * Ny);
+	}
+}
+
+void load_walls_pwal() {
+	char path[260] = "";
+
+	if (get_open_path("Select Walls PWAL Map (*.pwal)\0*.pwal\0All Files (*.*)\0*.*\0", "pwal", path, sizeof(path))) {
+		size_t skip_bytes = 0;
+		printf("12");
+		load_bin(path, walls, sizeof(bool), Nx * Ny, &skip_bytes);
+		printf("43");
+	}
+}
+
+void save_walls_pwal() {
+	char path[260] = "";
+
+	if (get_save_path("Select Walls PWAL Map (*.pwal)\0*.pwal\0All Files (*.*)\0*.*\0", "pwal", path, sizeof(path))) {
+		clear_bin(path);
+		save_bin(path, walls, sizeof(bool), Nx * Ny);
 	}
 }

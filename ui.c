@@ -1,6 +1,7 @@
 ﻿#include "ui.h"
 #include "walls.h"
-#include "math_calculations.h"
+#include "flow.h"
+#include "settings.h"
 
 static UIButtons ui_buttons = { 0 };
 static Vector2 mouse;
@@ -80,6 +81,14 @@ void ui_buttons_update(void) {
                 case BUTTON_WALL_POLY:       wall_type = WALL_POLY; break;
                 case BUTTON_WALL_ERASER:       wall_type = WALL_ERASER; break;
                 case BUTTON_WALL_CLEAR:       init_walls(); break;
+                case BUTTON_LOAD_BMP:       load_walls_bmp(); break;
+                case BUTTON_LOAD_WALL:       load_walls_pwal(); break;
+                case BUTTON_SAVE_WALL:       save_walls_pwal(); break;
+                case BUTTON_LOAD_ALL:       load_all_psim(); break;
+                case BUTTON_SAVE_ALL:       save_all_psim(); break;
+                case BUTTON_AREA_CLOGGED:       area_type = AREA_CLOGGED; break;
+                case BUTTON_AREA_CYCLIC:       area_type = AREA_CYCLIC; break;
+                case BUTTON_AREA_OUTGOING:       area_type = AREA_OUTGOING; break;
             }
 
             ui_buttons.buttons[i].pressed = false;
