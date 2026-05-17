@@ -161,7 +161,7 @@ void calculate(double* F, double* F_next) {
 		for (y = 0; y < Ny; y++) {
 			if (walls[y * Nx + 0]) continue;
 			int idx = (y * Nx + 0) * NL;
-			double u_in = 0.07;
+			double u_in = flow_speed;
 			double rho = (F_next[idx + 0] + F_next[idx + 1] + F_next[idx + 5] +
 				2.0 * (F_next[idx + 6] + F_next[idx + 7] + F_next[idx + 8]))
 				/ (1.0 - u_in);

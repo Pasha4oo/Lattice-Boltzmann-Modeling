@@ -135,10 +135,13 @@
   <ItemGroup>
     <ClCompile Include="consts.c" />
     <ClCompile Include="files.c" />
+    <ClCompile Include="lights.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="flow.c" />
+    <ClCompile Include="pauser.c" />
     <ClCompile Include="settings.c" />
-    <ClCompile Include="ui.c" />
+    <ClCompile Include="buttons.c" />
+    <ClCompile Include="sliders.c" />
     <ClCompile Include="walls.c" />
     <ClCompile Include="window.c" />
   </ItemGroup>
@@ -149,8 +152,11 @@
     <ClInclude Include="consts.h" />
     <ClInclude Include="flow.h" />
     <ClInclude Include="files.h" />
+    <ClInclude Include="lights.h" />
+    <ClInclude Include="pauser.h" />
     <ClInclude Include="settings.h" />
-    <ClInclude Include="ui.h" />
+    <ClInclude Include="buttons.h" />
+    <ClInclude Include="sliders.h" />
     <ClInclude Include="walls.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>

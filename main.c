@@ -8,9 +8,13 @@
 #include "consts.h"
 #include "window.h"
 #include "flow.h"
-#include "ui.h"
+#include "buttons.h"
 #include "walls.h"
 #include "files.h"
+#include "lights.h"
+#include "sliders.h"
+#include "settings.h"
+#include "pauser.h"
 
 int main(void)
 {
@@ -62,6 +66,7 @@ int main(void)
     create_button((Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "LOAD", BLUE, BUTTON_LOAD_WALL);
     create_button((Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "SAVE", BLUE, BUTTON_SAVE_WALL);
     
+    create_button((Rectangle) { Nx + 130, 70, 80, 80 }, 0.4f, BROWN, "", BLUE, BUTTON_PAUSER);
     create_button((Rectangle) { Nx + 130, 190, 80, 50 }, 0.4f, RED, "RESET", BLUE, BUTTON_RESTART_LIQUID);
    
     create_button((Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "CLOG", BLUE, BUTTON_AREA_CLOGGED);
@@ -70,6 +75,15 @@ int main(void)
     create_button((Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "LOAD", BLUE, BUTTON_LOAD_ALL);
     create_button((Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "SAVE", BLUE, BUTTON_SAVE_ALL);
 
+    light_system = (LightSystem){ NULL, -1, 0 };
+    create_light(&light_system, (Vector2) { 55 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT + 25.0f });
+    create_light(&light_system, (Vector2) { 55 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT + 25.0f });
+    create_light(&light_system, (Vector2) { 55 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT + 25.0f });
+    light_system.enabled_index = 2;
+
+    create_slider((Rectangle) { 360 + WALLS_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_BRUSH);
+    create_slider((Rectangle) { 275 + FILES_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_SPEED);
+
     double max_v = 1e-12;
     float timer = 0.0f;
 
@@ -77,7 +91,7 @@ int main(void)
 
     while (!WindowShouldClose())
     {
-        calculate(F, F_next);
+        if (is_playing) { calculate(F, F_next); }
 
         timer += GetFrameTime();
 
@@ -89,7 +103,7 @@ int main(void)
                        set_cylinder_wall(walls, pos_x++, pos_y++, F);*/
 
             SetWindowTitle(TextFormat("FPS: %i", GetFPS()));
-            update_max_v(&max_v, F);
+            if (is_playing) { update_max_v(&max_v, F); }
             //push_liquid(F, 3);
             printf("local_max = %e\n", max_v);
 
@@ -100,6 +114,7 @@ int main(void)
         UpdateTexture(texture, pixels);
 
         ui_buttons_update();
+        ui_sliders_update();
 
         BeginDrawing();
             ClearBackground((Color) { 172, 155, 135, 255 });
@@ -113,19 +128,26 @@ int main(void)
             DrawRectangleRounded((Rectangle) { 20 + WALLS_BASE_LENGTH, Ny + 10 + WALLS_BASE_HIGHT, 425, 190 }, 0.1f, 5, DARKBROWN);
             DrawRectangleRounded((Rectangle) { 35 + WALLS_BASE_LENGTH, Ny + 10 + WALLS_BASE_HIGHT, 410, 180 }, 0.1f, 5, BROWN);
             DrawText("Walls", 390 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 15, RAYWHITE);
+            DrawText("Brush \nSize:", 390 + WALLS_BASE_LENGTH, Ny + 70 + WALLS_BASE_HIGHT, 15, RAYWHITE);
+            DrawText(TextFormat("%d p", (int)(brush_size)), 390 + WALLS_BASE_LENGTH, Ny + 110 + WALLS_BASE_HIGHT, 19, RAYWHITE);
 
-            DrawRectangleRounded((Rectangle) { 20 + FILES_BASE_LENGTH, Ny + 10 + FILES_BASE_HIGHT, 315, 190 }, 0.1f, 5, DARKBROWN);
-            DrawRectangleRounded((Rectangle) { 35 + FILES_BASE_LENGTH, Ny + 10 + FILES_BASE_HIGHT, 300, 180 }, 0.1f, 5, BROWN);
+            DrawRectangleRounded((Rectangle) { 20 + FILES_BASE_LENGTH, Ny + 10 + FILES_BASE_HIGHT, 355, 190 }, 0.1f, 5, DARKBROWN);
+            DrawRectangleRounded((Rectangle) { 35 + FILES_BASE_LENGTH, Ny + 10 + FILES_BASE_HIGHT, 340, 180 }, 0.1f, 5, BROWN);
             DrawText("Settings", 265 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 15, RAYWHITE);
+            DrawText("Flow \nSpeed:", 305 + FILES_BASE_LENGTH, Ny + 70 + FILES_BASE_HIGHT, 15, RAYWHITE);
+            if (area_type == AREA_OUTGOING) {
+                DrawText(TextFormat("%.2f", (flow_speed)), 305 + FILES_BASE_LENGTH, Ny + 110 + FILES_BASE_HIGHT, 19, RAYWHITE);
+            }
+            else {
+                DrawText("0", 305 + FILES_BASE_LENGTH, Ny + 110 + FILES_BASE_HIGHT, 19, RED);
+            }
 
-            DrawCircleV((Vector2) { 55 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT + 25.0f }, 8.0f * 1.4f, Fade(GREEN, 0.3f));
-            DrawCircleV((Vector2) { 55 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT + 25.0f }, 8.0f, GREEN);
-            DrawCircleV((Vector2) { 53 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT + 23.0f }, 8.0f * 0.3f, Fade(WHITE, 0.7f));
+            ui_lights_draw(&light_system);
 
-            DrawCircleV((Vector2) { 55 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT + 25.0f }, 8.0f, DARKGRAY);
-            DrawCircleV((Vector2) { 53 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT + 23.0f }, 8.0f * 0.2f, Fade(WHITE, 0.3f));
-
+            DrawRectangleRounded((Rectangle) { Nx + 120, 70, 90, 90 }, 0.4f, 5, DARKBROWN);
             ui_buttons_draw();
+            draw_pauser((Vector2) { Nx + 147, 85}, (Vector2) { 45.0f, 45.0f });
+            ui_sliders_draw();
             walls_draw();
         EndDrawing();
 

@@ -3,10 +3,12 @@
 #include "files.h"
 #include "flow.h"
 #include "walls.h"
+#include "lights.h"
 
 AreaType area_type = AREA_OUTGOING;
 FlowDirection flow_direction = FLOW_LEFT_TO_RIGHT;
-float brush_size = 10.0f;
+float brush_size = 14.0f;
+float flow_speed = 0.07f;
 
 void load_all_psim() {
 	char path[260] = "";
@@ -18,6 +20,8 @@ void load_all_psim() {
 		load_bin(path, &area_type, sizeof(AreaType), 1, &skip_bytes);
 		load_bin(path, &flow_direction, sizeof(FlowDirection), 1, &skip_bytes);
 		load_bin(path, &brush_size, sizeof(float), 1, &skip_bytes);
+		load_bin(path, &flow_speed, sizeof(float), 1, &skip_bytes);
+		load_bin(path, &light_system.enabled_index, sizeof(int), 1, &skip_bytes);
 	}
 }
 
@@ -32,5 +36,7 @@ void save_all_psim() {
 		save_bin(path, &area_type, sizeof(AreaType), 1);
 		save_bin(path, &flow_direction, sizeof(FlowDirection), 1);
 		save_bin(path, &brush_size, sizeof(float), 1);
+		save_bin(path, &flow_speed, sizeof(float), 1);
+		save_bin(path, &light_system.enabled_index, sizeof(int), 1);
 	}
 }

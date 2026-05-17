@@ -1,9 +1,11 @@
-﻿#include "ui.h"
+﻿#include "buttons.h"
 #include "walls.h"
 #include "flow.h"
 #include "settings.h"
+#include "lights.h"
+#include "pauser.h"
 
-static UIButtons ui_buttons = { 0 };
+UIButtons ui_buttons = { 0 };
 static Vector2 mouse;
 
 Button create_button(Rectangle rect, float rect_roundness, Color rect_color, const char* text, Color text_color, ButtonID id) {
@@ -73,7 +75,7 @@ void ui_buttons_update(void) {
 
         if (ui_buttons.buttons[i].pressed) {
             switch (ui_buttons.buttons[i].id) {
-                case BUTTON_START:           printf("1234"); break;
+                case BUTTON_PAUSER:           switch_pauser(); break;
                 case BUTTON_RESTART_LIQUID:  init_F(); break;
                 case BUTTON_WALL_CIRCLE:     wall_type = WALL_CIRCLE; break;
                 case BUTTON_WALL_LINE:       wall_type = WALL_LINE; break;
@@ -86,9 +88,9 @@ void ui_buttons_update(void) {
                 case BUTTON_SAVE_WALL:       save_walls_pwal(); break;
                 case BUTTON_LOAD_ALL:       load_all_psim(); break;
                 case BUTTON_SAVE_ALL:       save_all_psim(); break;
-                case BUTTON_AREA_CLOGGED:       area_type = AREA_CLOGGED; break;
-                case BUTTON_AREA_CYCLIC:       area_type = AREA_CYCLIC; break;
-                case BUTTON_AREA_OUTGOING:       area_type = AREA_OUTGOING; break;
+                case BUTTON_AREA_CLOGGED:       area_type = AREA_CLOGGED; enable_light(&light_system, 0); break;
+                case BUTTON_AREA_CYCLIC:       area_type = AREA_CYCLIC; enable_light(&light_system, 1); break;
+                case BUTTON_AREA_OUTGOING:       area_type = AREA_OUTGOING; enable_light(&light_system, 2); break;
             }
 
             ui_buttons.buttons[i].pressed = false;

@@ -27,7 +27,7 @@
     <ClCompile Include="main.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="ui.c">
+    <ClCompile Include="buttons.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="walls.c">
@@ -37,6 +37,15 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="files.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="lights.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="sliders.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="pauser.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +62,7 @@
     <ClInclude Include="window.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="ui.h">
+    <ClInclude Include="buttons.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="walls.h">
@@ -63,6 +72,15 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="files.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="lights.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="sliders.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="pauser.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

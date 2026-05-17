@@ -1,6 +1,7 @@
 ﻿#include "walls.h"
 #include "consts.h"
 #include "files.h"
+#include "settings.h"
 
 WallType wall_type = WALL_NONE;
 bool* walls = NULL;
@@ -31,16 +32,16 @@ void walls_update(void) {
 
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
 		if (wall_type == WALL_FREE) {
-			set_circle_wall(mouse, 20);
+			set_circle_wall(mouse, brush_size);
 		}
 		else if (wall_type == WALL_ERASER) {
-			walls_eraser(mouse, 20);
+			walls_eraser(mouse, brush_size);
 		}
 	}
 
 	if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) { return; }
 	else if (wall_type == WALL_CIRCLE) {
-		set_circle_wall(mouse, 60);
+		set_circle_wall(mouse, brush_size);
 	}
 	else if (wall_type == WALL_LINE) {
 		if (first_wall_line_pos.x == -1 && first_wall_line_pos.y == -1) {
@@ -61,23 +62,23 @@ void walls_draw(void) {
 	Vector2 mouse = GetMousePosition();
 
 	if (wall_type == WALL_CIRCLE) {
-		DrawCircleV(mouse, 60, walls_color);
+		DrawCircleV(mouse, brush_size, walls_color);
 	}
 	else if (wall_type == WALL_LINE) {
 		if (first_wall_line_pos.x != -1 && first_wall_line_pos.y != -1) {
-			DrawLineEx(first_wall_line_pos, mouse, 40, walls_color);
-			DrawCircleV(first_wall_line_pos, 20, walls_color);
-			DrawCircleV(mouse, 20, walls_color);
+			DrawLineEx(first_wall_line_pos, mouse, brush_size * 2, walls_color);
+			DrawCircleV(first_wall_line_pos, brush_size, walls_color);
+			DrawCircleV(mouse, brush_size, walls_color);
 		}
 		else {
-			DrawCircleV(mouse, 20, walls_color);
+			DrawCircleV(mouse, brush_size, walls_color);
 		}
 	}
 	else if (wall_type == WALL_FREE) {
-		DrawCircleV(mouse, 20, walls_color);
+		DrawCircleV(mouse, brush_size, walls_color);
 	}
 	else if (wall_type == WALL_ERASER) {
-		DrawPolyLinesEx(mouse, 36, 20, 0, 3, GRAY);
+		DrawPolyLinesEx(mouse, 36, brush_size, 0, 3, GRAY);
 	}
 }
 
@@ -155,7 +156,7 @@ void load_walls_bmp() {
 void load_walls_pwal() {
 	char path[260] = "";
 
-	if (get_open_path("Select Walls PWAL Map (*.pwal)\0*.pwal\0All Files (*.*)\0*.*\0", "pwal", path, sizeof(path))) {
+	if (get_open_path("Select Walls PWAL Map (*.pwal)\0*.pwal\0Select Walls PSIM Map (*.psim)\0*.psim\0All Files (*.*)\0*.*\0", "pwal", path, sizeof(path))) {
 		size_t skip_bytes = 0;
 		printf("12");
 		load_bin(path, walls, sizeof(bool), Nx * Ny, &skip_bytes);

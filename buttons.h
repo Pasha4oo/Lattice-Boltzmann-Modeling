@@ -8,7 +8,7 @@
 #define MAX_BUTTONS 32
 
 typedef enum ButtonID {
-	BUTTON_START,
+	BUTTON_PAUSER,
 	BUTTON_RESTART_LIQUID,
 	BUTTON_WALL_CIRCLE,
 	BUTTON_WALL_LINE,
@@ -44,6 +44,8 @@ typedef struct UIButtons {
 	Button buttons[MAX_BUTTONS];
 	int counter;
 } UIButtons;
+
+extern UIButtons ui_buttons;
 
 Button create_button(Rectangle rect, float rect_roundness, Color rect_color, const char* text, Color text_color, ButtonID id);
 

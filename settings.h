@@ -18,6 +18,7 @@ typedef enum FlowDirection {
 extern AreaType area_type;
 extern FlowDirection flow_direction;
 extern float brush_size;
+extern float flow_speed;
 
 void load_all_psim();
 void save_all_psim();
