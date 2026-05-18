@@ -15,6 +15,7 @@ typedef struct LightSystem {
 } LightSystem;
 
 extern LightSystem light_system;
+extern LightSystem light_system2;
 
 void enable_light(LightSystem* light_system, int enable_index);
 void create_light(LightSystem* light_system, Vector2 pos);

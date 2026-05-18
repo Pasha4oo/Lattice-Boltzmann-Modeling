@@ -15,6 +15,7 @@
 #include "sliders.h"
 #include "settings.h"
 #include "pauser.h"
+#include "arrow.h"
 
 int main(void)
 {
@@ -31,7 +32,7 @@ int main(void)
 
     //set_cylinder_wall(walls, Nx / 2, Ny / 4, F);
     //set_cylinder_wall(walls, Nx / 2, Ny / 3, F);
-    //set_circle_wall((Vector2) { Nx / 2, Ny / 2 }, 60);
+    set_circle_wall((Vector2) { Nx / 2, Ny / 2 }, 60);
     //set_cylinder_wall(walls, Nx / 2 + 180, Ny, F);
 
     //for (int it = 0; it < Nt; it++) {
@@ -60,14 +61,14 @@ int main(void)
     create_button((Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "FREE", BLUE, BUTTON_WALL_FREE);
     create_button((Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "LINE", BLUE, BUTTON_WALL_LINE);
     create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, BLUE, "ERASE", BLUE, BUTTON_WALL_ERASER);
-    create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "POLY", BLUE, BUTTON_WALL_POLY);
+    create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "NONE", BLUE, BUTTON_WALL_NONE);
     create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, RED, "CLEAR", BLUE, BUTTON_WALL_CLEAR);
     create_button((Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, BLUE, "BMP", BLUE, BUTTON_LOAD_BMP);
     create_button((Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "LOAD", BLUE, BUTTON_LOAD_WALL);
     create_button((Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "SAVE", BLUE, BUTTON_SAVE_WALL);
     
-    create_button((Rectangle) { Nx + 130, 70, 80, 80 }, 0.4f, BROWN, "", BLUE, BUTTON_PAUSER);
-    create_button((Rectangle) { Nx + 130, 190, 80, 50 }, 0.4f, RED, "RESET", BLUE, BUTTON_RESTART_LIQUID);
+    create_button((Rectangle) { Nx + 130, 35, 80, 80 }, 0.4f, BROWN, "", BLUE, BUTTON_PAUSER);
+    create_button((Rectangle) { Nx + 120, 180, 80, 50 }, 0.4f, RED, "RESET", BLUE, BUTTON_RESTART_LIQUID);
    
     create_button((Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "CLOG", BLUE, BUTTON_AREA_CLOGGED);
     create_button((Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "CYCLIC", BLUE, BUTTON_AREA_CYCLIC);
@@ -81,13 +82,19 @@ int main(void)
     create_light(&light_system, (Vector2) { 55 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT + 25.0f });
     light_system.enabled_index = 2;
 
-    create_slider((Rectangle) { 360 + WALLS_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_BRUSH);
-    create_slider((Rectangle) { 275 + FILES_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_SPEED);
+    light_system2 = (LightSystem){ NULL, -1, 0 };
+    create_light(&light_system2, (Vector2) { 130 + Nx + TAU_BASE_LENGTH, 80 + TAU_BASE_HIGHT + 25.0f });
 
-    double max_v = 1e-12;
+    create_slider((Rectangle) { 360 + WALLS_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_BRUSH, 0.5f);
+    create_slider((Rectangle) { 275 + FILES_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_SPEED, 0.5f);
+    create_slider((Rectangle) { 140 + Nx + TAU_BASE_LENGTH, 155 + TAU_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_TAU, 0.05825f);
+
+    arrow = create_arrow((Vector2) { 60 + Nx + ARROW_BASE_LENGTH, 150 + Ny + ARROW_BASE_HIGHT }, 100.0f, RAYWHITE);
+
     float timer = 0.0f;
 
     int pos_x = 40; int pos_y = 40;
+    bool explode_flicker = false;
 
     while (!WindowShouldClose())
     {
@@ -104,8 +111,17 @@ int main(void)
 
             SetWindowTitle(TextFormat("FPS: %i", GetFPS()));
             if (is_playing) { update_max_v(&max_v, F); }
+            if (max_v > 200 && !explode_flicker) {
+                light_system2.enabled_index = 0; 
+                explode_flicker = true;
+            }
+            else { 
+                light_system2.enabled_index = -1; 
+                explode_flicker = false;
+            }
             //push_liquid(F, 3);
             printf("local_max = %e\n", max_v);
+            printf("tau = %e\n", tau);
 
             timer = 0.0f;
         }
@@ -113,6 +129,7 @@ int main(void)
         update_speed_pixels(F, pixels, max_v);
         UpdateTexture(texture, pixels);
 
+        update_arrow(&arrow);
         ui_buttons_update();
         ui_sliders_update();
 
@@ -144,9 +161,27 @@ int main(void)
 
             ui_lights_draw(&light_system);
 
-            DrawRectangleRounded((Rectangle) { Nx + 120, 70, 90, 90 }, 0.4f, 5, DARKBROWN);
+            DrawRectangleRounded((Rectangle) { 20 + Nx + ARROW_BASE_LENGTH, Ny + ARROW_BASE_HIGHT + 20, 195, 240 }, 0.1f, 5, DARKBROWN);
+            DrawRectangleRounded((Rectangle) { 35 + Nx + ARROW_BASE_LENGTH, Ny + ARROW_BASE_HIGHT + 20, 180, 230 }, 0.1f, 5, BROWN);
+            DrawText("Angle", Nx + 150 + ARROW_BASE_LENGTH, Ny + 30 + ARROW_BASE_HIGHT, 15, RAYWHITE);
+            draw_arrow(&arrow);
+            DrawText(TextFormat("%d", (int)(arrow.angle* (180.0f / M_PI) + (arrow.angle >= 0 ? 0.5f : -0.5f))), Nx + 100 + ARROW_BASE_LENGTH, Ny + 30 + ARROW_BASE_HIGHT, 19, RAYWHITE);
+
+            DrawRectangleRounded((Rectangle) { 20 + Nx + TAU_BASE_LENGTH - 40, 50 + TAU_BASE_HIGHT, 195, 240 }, 0.1f, 5, DARKBROWN);
+            DrawRectangleRounded((Rectangle) { 35 + Nx + TAU_BASE_LENGTH - 40, 50 + TAU_BASE_HIGHT, 180, 230 }, 0.1f, 5, BROWN);
+            DrawText("Flow", 120 + Nx + TAU_BASE_LENGTH, 60 + TAU_BASE_HIGHT, 15, RAYWHITE);
+            DrawText("TAU:", 85 + Nx + TAU_BASE_LENGTH, 170 + TAU_BASE_HIGHT, 19, RAYWHITE);
+            DrawText(TextFormat("%.2f", (tau)), 90 + Nx + TAU_BASE_LENGTH, 200 + TAU_BASE_HIGHT, 19, RAYWHITE);
+
+            DrawText("Max", 15 + Nx + TAU_BASE_LENGTH, 170 + TAU_BASE_HIGHT, 19, RAYWHITE);
+            DrawText("Vel:", 15 + Nx + TAU_BASE_LENGTH, 190 + TAU_BASE_HIGHT, 19, RAYWHITE);
+            DrawText(TextFormat("%.3f", (max_v)), 15 + Nx + TAU_BASE_LENGTH, 215 + TAU_BASE_HIGHT, 19, RAYWHITE);
+
+            ui_lights_draw(&light_system2);
+
+            DrawRectangleRounded((Rectangle) { Nx + 120, 35, 90, 90 }, 0.4f, 5, DARKBROWN);
             ui_buttons_draw();
-            draw_pauser((Vector2) { Nx + 147, 85}, (Vector2) { 45.0f, 45.0f });
+            draw_pauser((Vector2) { Nx + 147, 50}, (Vector2) { 45.0f, 45.0f });
             ui_sliders_draw();
             walls_draw();
         EndDrawing();

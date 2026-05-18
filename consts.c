@@ -5,8 +5,6 @@ const int Ny = 400;
 const int WINDOW_WIDTH = 1100;
 const int WINDOW_HEIGHT = 710;
 
-const double tau = .57; //0.53
-
 const int Nt = 30000;
 const int NL = 9;
 

@@ -5,7 +5,7 @@
 
 #include "consts.h"
 
-int FILES_BASE_LENGTH = 490;
+int FILES_BASE_LENGTH = 470;
 int FILES_BASE_HIGHT = 60;
 
 bool get_open_path(const char* filter, const char* extension, char* dir, size_t max_size) {

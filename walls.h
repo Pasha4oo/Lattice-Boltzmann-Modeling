@@ -13,8 +13,7 @@ typedef enum WallType {
 	WALL_ERASER,
 	WALL_CIRCLE,
 	WALL_LINE,
-	WALL_FREE,
-	WALL_POLY
+	WALL_FREE
 } WallType;
 
 extern bool* walls;
@@ -32,6 +31,8 @@ void walls_draw(void);
 void set_line_wall(Vector2 first_pos, Vector2 second_pos);
 void set_circle_wall(Vector2 pos, int radius);
 void walls_eraser(Vector2 pos, int radius);
-void load_walls_bmp();
-void load_walls_pwal();
-void save_walls_pwal();
+void load_walls_bmp(void);
+void load_walls_pwal(void);
+void save_walls_pwal(void);
+void set_clogged_walls(void);
+void remove_clogged_walls(void);

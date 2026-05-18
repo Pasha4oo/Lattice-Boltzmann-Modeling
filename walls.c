@@ -53,9 +53,6 @@ void walls_update(void) {
 			first_wall_line_pos = (Vector2){ -1, -1 };
 		}
 	}
-	else if (wall_type == WALL_POLY) {
-		
-	}
 }
 
 void walls_draw(void) {
@@ -66,8 +63,9 @@ void walls_draw(void) {
 	}
 	else if (wall_type == WALL_LINE) {
 		if (first_wall_line_pos.x != -1 && first_wall_line_pos.y != -1) {
-			DrawLineEx(first_wall_line_pos, mouse, brush_size * 2, walls_color);
-			DrawCircleV(first_wall_line_pos, brush_size, walls_color);
+			Vector2 first_screen = { first_wall_line_pos.x + 50, first_wall_line_pos.y + 25 };
+			DrawLineEx(first_screen, mouse, brush_size * 2, walls_color);
+			DrawCircleV(first_screen, brush_size, walls_color);
 			DrawCircleV(mouse, brush_size, walls_color);
 		}
 		else {
@@ -145,7 +143,7 @@ void walls_eraser(Vector2 pos, int radius) {
 	}
 }
 
-void load_walls_bmp() {
+void load_walls_bmp(void) {
 	char path[260] = "";
 
 	if (get_open_path("Select Walls BMP Map (*.bmp)\0*.bmp\0All Files (*.*)\0*.*\0", "bmp", path, sizeof(path))) {
@@ -153,7 +151,7 @@ void load_walls_bmp() {
 	}
 }
 
-void load_walls_pwal() {
+void load_walls_pwal(void) {
 	char path[260] = "";
 
 	if (get_open_path("Select Walls PWAL Map (*.pwal)\0*.pwal\0Select Walls PSIM Map (*.psim)\0*.psim\0All Files (*.*)\0*.*\0", "pwal", path, sizeof(path))) {
@@ -164,11 +162,35 @@ void load_walls_pwal() {
 	}
 }
 
-void save_walls_pwal() {
+void save_walls_pwal(void) {
 	char path[260] = "";
 
 	if (get_save_path("Select Walls PWAL Map (*.pwal)\0*.pwal\0All Files (*.*)\0*.*\0", "pwal", path, sizeof(path))) {
 		clear_bin(path);
 		save_bin(path, walls, sizeof(bool), Nx * Ny);
+	}
+}
+
+void set_clogged_walls(void) {
+	for (int x = 0; x < Nx; x++) {
+		walls[0 * Nx + x] = true;
+		walls[(Ny - 1) * Nx + x] = true;
+	}
+
+	for (int y = 0; y < Ny; y++) {
+		walls[y * Nx + 0] = true;
+		walls[y * Nx + (Nx - 1)] = true;
+	}
+}
+
+void remove_clogged_walls(void) {
+	for (int x = 0; x < Nx; x++) {
+		walls[0 * Nx + x] = false;
+		walls[(Ny - 1) * Nx + x] = false;
+	}
+
+	for (int y = 0; y < Ny; y++) {
+		walls[y * Nx + 0] = false;
+		walls[y * Nx + (Nx - 1)] = false;
 	}
 }

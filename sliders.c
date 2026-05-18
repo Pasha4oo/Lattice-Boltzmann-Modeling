@@ -14,7 +14,7 @@ static void recalculate_slider_handle(Slider* slider) {
     slider->handle_rect.height = handle_height;
 }
 
-Slider create_slider(Rectangle rect, Color bar_color, Color handle_color, SliderID id) {
+Slider create_slider(Rectangle rect, Color bar_color, Color handle_color, SliderID id, float value) {
 	Slider slider = (Slider)
 	{
 		.rect = rect,
@@ -23,7 +23,7 @@ Slider create_slider(Rectangle rect, Color bar_color, Color handle_color, Slider
         .render_color = handle_color,
         .target_color = handle_color,
 		.is_dragging = false,
-		.value = 0.5f,
+		.value = value,
         .id = id
 	};
 
@@ -89,6 +89,7 @@ void ui_sliders_update(void) {
             switch (ui_sliders.sliders[i].id) {
                 case SLIDER_BRUSH:           brush_size = ui_sliders.sliders[i].value * 20 + 4; break;
                 case SLIDER_SPEED:           flow_speed = ui_sliders.sliders[i].value * 0.14; break;
+                case SLIDER_TAU:           tau = ui_sliders.sliders[i].value * 1.2 + 0.5001; break;
 
                 }
         }

@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="arrow.c" />
     <ClCompile Include="consts.c" />
     <ClCompile Include="files.c" />
     <ClCompile Include="lights.c" />
@@ -149,6 +150,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="arrow.h" />
     <ClInclude Include="consts.h" />
     <ClInclude Include="flow.h" />
     <ClInclude Include="files.h" />

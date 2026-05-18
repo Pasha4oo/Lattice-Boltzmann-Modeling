@@ -4,6 +4,7 @@
 
 extern double* F;
 extern double* F_next;
+extern double max_v;
 
 void init_F();
 double randn(void);

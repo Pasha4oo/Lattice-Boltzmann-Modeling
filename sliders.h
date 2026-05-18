@@ -6,7 +6,8 @@
 
 typedef enum SliderID {
     SLIDER_BRUSH,
-    SLIDER_SPEED
+    SLIDER_SPEED,
+    SLIDER_TAU
 } SliderID;
 
 typedef struct Slider {
@@ -28,7 +29,7 @@ typedef struct UISliders {
 
 extern UISliders ui_sliders;
 
-Slider create_slider(Rectangle rect, Color bar_color, Color handle_color, SliderID id);
+Slider create_slider(Rectangle rect, Color bar_color, Color handle_color, SliderID id, float value);
 
 void update_slider(Slider* slider);
 void draw_slider(Slider* slider);

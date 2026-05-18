@@ -1,9 +1,10 @@
 ﻿#include "lights.h"
 
 LightSystem light_system;
+LightSystem light_system2;
 
 void enable_light(LightSystem* light_system, int enable_index) {
-	if (enable_index > 0 && enable_index <= light_system->lights_count) {
+	if (enable_index >= 0 && enable_index <= light_system->lights_count) {
 		light_system->enabled_index = enable_index;
 	}
 }

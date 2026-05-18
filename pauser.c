@@ -29,15 +29,16 @@ void draw_pauser(Vector2 pos, Vector2 size) {
         Vector2 p3 = { pos.x + size.x, pos.y + size.y / 2.0f };
 
         float ball_radius = size.x * 0.10f;
+        Color color = (Color){ 0, 185, 39, 255 };
 
-        DrawCircleV(p1, ball_radius, GREEN);
-        DrawCircleV(p2, ball_radius, GREEN);
-        DrawCircleV(p3, ball_radius, GREEN);
+        DrawCircleV(p1, ball_radius, color);
+        DrawCircleV(p2, ball_radius, color);
+        DrawCircleV(p3, ball_radius, color);
 
-        DrawLineEx(p1, p2, ball_radius * 2.0f, GREEN);
-        DrawLineEx(p2, p3, ball_radius * 2.0f, GREEN);
-        DrawLineEx(p3, p1, ball_radius * 2.0f, GREEN);
+        DrawLineEx(p1, p2, ball_radius * 2.0f, color);
+        DrawLineEx(p2, p3, ball_radius * 2.0f, color);
+        DrawLineEx(p3, p1, ball_radius * 2.0f, color);
 
-        DrawTriangle(p1, p2, p3, GREEN);
+        DrawTriangle(p1, p2, p3, color);
     }
 }

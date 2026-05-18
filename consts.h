@@ -8,7 +8,6 @@ extern const int Nx;
 extern const int Ny;
 extern const int WINDOW_WIDTH;
 extern const int WINDOW_HEIGHT;
-extern const double tau;
 
 extern const int Nt;
 extern const int NL;
@@ -16,4 +15,3 @@ extern const int NL;
 extern const int cxs[];
 extern const int cys[];
 extern const double weights[];
-//#define LBM_

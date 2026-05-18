@@ -76,11 +76,11 @@ void ui_buttons_update(void) {
         if (ui_buttons.buttons[i].pressed) {
             switch (ui_buttons.buttons[i].id) {
                 case BUTTON_PAUSER:           switch_pauser(); break;
-                case BUTTON_RESTART_LIQUID:  init_F(); break;
+                case BUTTON_RESTART_LIQUID:  init_F(); max_v = 1e-12; break;
                 case BUTTON_WALL_CIRCLE:     wall_type = WALL_CIRCLE; break;
                 case BUTTON_WALL_LINE:       wall_type = WALL_LINE; break;
                 case BUTTON_WALL_FREE:       wall_type = WALL_FREE; break;
-                case BUTTON_WALL_POLY:       wall_type = WALL_POLY; break;
+                case BUTTON_WALL_NONE:       wall_type = WALL_NONE; break;
                 case BUTTON_WALL_ERASER:       wall_type = WALL_ERASER; break;
                 case BUTTON_WALL_CLEAR:       init_walls(); break;
                 case BUTTON_LOAD_BMP:       load_walls_bmp(); break;
@@ -88,9 +88,21 @@ void ui_buttons_update(void) {
                 case BUTTON_SAVE_WALL:       save_walls_pwal(); break;
                 case BUTTON_LOAD_ALL:       load_all_psim(); break;
                 case BUTTON_SAVE_ALL:       save_all_psim(); break;
-                case BUTTON_AREA_CLOGGED:       area_type = AREA_CLOGGED; enable_light(&light_system, 0); break;
-                case BUTTON_AREA_CYCLIC:       area_type = AREA_CYCLIC; enable_light(&light_system, 1); break;
-                case BUTTON_AREA_OUTGOING:       area_type = AREA_OUTGOING; enable_light(&light_system, 2); break;
+                case BUTTON_AREA_CLOGGED:       area_type = AREA_CLOGGED; enable_light(&light_system, 0); set_clogged_walls(); break;
+                case BUTTON_AREA_CYCLIC:       
+                    if (area_type == AREA_CLOGGED) { 
+                        remove_clogged_walls(); 
+                    } 
+                    area_type = AREA_CYCLIC; 
+                    enable_light(&light_system, 1); 
+                    break;
+                case BUTTON_AREA_OUTGOING:       
+                    if (area_type == AREA_CLOGGED) {
+                        remove_clogged_walls();
+                    }
+                    area_type = AREA_OUTGOING; 
+                    enable_light(&light_system, 2); 
+                    break;
             }
 
             ui_buttons.buttons[i].pressed = false;

@@ -12,9 +12,11 @@
 #include "consts.h"
 #include "settings.h"
 #include "walls.h"
+#include "arrow.h"
 
 double* F = NULL;
 double* F_next = NULL;
+double max_v = 1e-12;
 
 void init_F() {
 	free(F);
@@ -124,7 +126,7 @@ void calculate(double* F, double* F_next) {
 				int next_x = x + cxs[i];
 				int next_y = y + cys[i];
 
-				if (area_type == AREA_CYCLIC) {
+				if (area_type == AREA_CYCLIC || area_type == AREA_CLOGGED) {
 					next_x = (next_x + Nx) % Nx;
 					next_y = (next_y + Ny) % Ny;
 				}
@@ -156,21 +158,33 @@ void calculate(double* F, double* F_next) {
 			}
 		}
 
-		// Вход (x == 0): Zou-He по заданной скорости u_in = 0.07
-		#pragma omp parallel for private(y, i)
+		// Вход (x == 0): Zou-He с заданной скоростью под углом angle
+		double angle = arrow.angle;
+		double ux_in = flow_speed * cos(angle);
+		double uy_in = flow_speed * sin(angle);
+
+		#pragma omp parallel for private(y)
 		for (y = 0; y < Ny; y++) {
 			if (walls[y * Nx + 0]) continue;
 			int idx = (y * Nx + 0) * NL;
-			double u_in = flow_speed;
-			double rho = (F_next[idx + 0] + F_next[idx + 1] + F_next[idx + 5] +
-				2.0 * (F_next[idx + 6] + F_next[idx + 7] + F_next[idx + 8]))
-				/ (1.0 - u_in);
-			for (i = 0; i < NL; i++) {
-				double cu = cxs[i] * u_in;
-				double u2 = u_in * u_in;
-				F_next[idx + i] = weights[i] * rho *
-					(1.0 + 3.0 * cu + 4.5 * cu * cu - 1.5 * u2);
-			}
+
+			double f0 = F_next[idx + 0];
+			double f1 = F_next[idx + 1];
+			double f5 = F_next[idx + 5];
+			double f6 = F_next[idx + 6];
+			double f7 = F_next[idx + 7];
+			double f8 = F_next[idx + 8];
+
+			double rho = (f0 + f1 + f5 +
+				2.0 * (f6 + f7 + f8)) / (1.0 - ux_in);
+
+			double f3 = f7 + (2.0 / 3.0) * rho * ux_in;
+			double f2 = f6 + (1.0 / 6.0) * rho * (ux_in + uy_in);
+			double f4 = f8 + (1.0 / 6.0) * rho * (ux_in - uy_in);
+
+			F_next[idx + 2] = f2;
+			F_next[idx + 3] = f3;
+			F_next[idx + 4] = f4;
 		}
 	}
 
