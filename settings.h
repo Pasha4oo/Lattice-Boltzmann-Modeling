@@ -15,6 +15,8 @@ extern AreaType area_type;
 extern float brush_size;
 extern float flow_speed;
 extern double tau;
+extern bool fixate;
 
 void load_all_psim();
 void save_all_psim();
+void export_velocity_csv();

@@ -88,6 +88,8 @@ void ui_buttons_update(void) {
                 case BUTTON_SAVE_WALL:       save_walls_pwal(); break;
                 case BUTTON_LOAD_ALL:       load_all_psim(); break;
                 case BUTTON_SAVE_ALL:       save_all_psim(); break;
+                case BUTTON_EXPORT_CSV:       export_velocity_csv(); break;
+                case BUTTON_FIXATE_VELOCITY: if (fixate) { fixate = false; } else { fixate = true; } break;
                 case BUTTON_AREA_CLOGGED:       area_type = AREA_CLOGGED; enable_light(&light_system, 0); set_clogged_walls(); break;
                 case BUTTON_AREA_CYCLIC:       
                     if (area_type == AREA_CLOGGED) { 

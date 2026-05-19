@@ -26,25 +26,10 @@ int main(void)
     init_F();
 
     //push_liquid(F, 3);
-    // push_liquid(F, 5);
 
     init_walls();
 
-    //set_cylinder_wall(walls, Nx / 2, Ny / 4, F);
-    //set_cylinder_wall(walls, Nx / 2, Ny / 3, F);
     set_circle_wall((Vector2) { Nx / 2, Ny / 2 }, 60);
-    //set_cylinder_wall(walls, Nx / 2 + 180, Ny, F);
-
-    //for (int it = 0; it < Nt; it++) {
-    //    //printf("%d\n", it);
-
-    //    calculate(walls, F, F_next);
-
-    //    //if (it % 100 == 0) {
-    //    //    //save_velocity_to_csv(it, Nx, Ny, NL, F, cxs, cys);
-    //    //    printf("Saved CSV for iteration %d\n", it);
-    //    //}
-    //}
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LBM");
 
@@ -75,6 +60,9 @@ int main(void)
     create_button((Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "OUT", BLUE, BUTTON_AREA_OUTGOING);
     create_button((Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "LOAD", BLUE, BUTTON_LOAD_ALL);
     create_button((Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "SAVE", BLUE, BUTTON_SAVE_ALL);
+    create_button((Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, BLUE, "SCV", BLUE, BUTTON_EXPORT_CSV);
+
+    create_button((Rectangle) { 10 + Nx + TAU_BASE_LENGTH, 230 + TAU_BASE_HIGHT, 50, 30 }, 0.4f, BLUE, "FIX", BLUE, BUTTON_FIXATE_VELOCITY);
 
     light_system = (LightSystem){ NULL, -1, 0 };
     create_light(&light_system, (Vector2) { 55 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT + 25.0f });
@@ -103,14 +91,9 @@ int main(void)
         timer += GetFrameTime();
 
         if (timer >= 0.2f) {
-            /*           for (int i = 0; i < Ny * Nx; i++) {
-                           walls[i] = false;
-                       }
-
-                       set_cylinder_wall(walls, pos_x++, pos_y++, F);*/
-
             SetWindowTitle(TextFormat("FPS: %i", GetFPS()));
-            if (is_playing) { update_max_v(&max_v, F); }
+
+            if (is_playing && !fixate) { update_max_v(&max_v, F); }
             if (max_v > 200 && !explode_flicker) {
                 light_system2.enabled_index = 0; 
                 explode_flicker = true;
@@ -119,7 +102,7 @@ int main(void)
                 light_system2.enabled_index = -1; 
                 explode_flicker = false;
             }
-            //push_liquid(F, 3);
+
             printf("local_max = %e\n", max_v);
             printf("tau = %e\n", tau);
 
@@ -173,9 +156,14 @@ int main(void)
             DrawText("TAU:", 85 + Nx + TAU_BASE_LENGTH, 170 + TAU_BASE_HIGHT, 19, RAYWHITE);
             DrawText(TextFormat("%.2f", (tau)), 90 + Nx + TAU_BASE_LENGTH, 200 + TAU_BASE_HIGHT, 19, RAYWHITE);
 
-            DrawText("Max", 15 + Nx + TAU_BASE_LENGTH, 170 + TAU_BASE_HIGHT, 19, RAYWHITE);
-            DrawText("Vel:", 15 + Nx + TAU_BASE_LENGTH, 190 + TAU_BASE_HIGHT, 19, RAYWHITE);
-            DrawText(TextFormat("%.3f", (max_v)), 15 + Nx + TAU_BASE_LENGTH, 215 + TAU_BASE_HIGHT, 19, RAYWHITE);
+            DrawText("Max", 15 + Nx + TAU_BASE_LENGTH, 160 + TAU_BASE_HIGHT, 19, RAYWHITE);
+            DrawText("Vel:", 15 + Nx + TAU_BASE_LENGTH, 180 + TAU_BASE_HIGHT, 19, RAYWHITE);
+            if (fixate) {
+                DrawText(TextFormat("%.3f", (max_v)), 15 + Nx + TAU_BASE_LENGTH, 205 + TAU_BASE_HIGHT, 19, RED);
+            }
+            else {
+                DrawText(TextFormat("%.3f", (max_v)), 15 + Nx + TAU_BASE_LENGTH, 205 + TAU_BASE_HIGHT, 19, RAYWHITE);
+            }
 
             ui_lights_draw(&light_system2);
 
@@ -186,23 +174,7 @@ int main(void)
             walls_draw();
         EndDrawing();
 
-        //float mouseWheel = GetMouseWheelMove();
-        //if (mouseWheel != 0)
-        //{
-        //    currentFps += (int)mouseWheel;
-        //    if (currentFps < 0) currentFps = 0;
-        //    SetTargetFPS(currentFps);
-        //}
-
         walls_update();
-        //update_speed_pixels();
-
-        //BeginDrawing();
-        //    ClearBackground(RAYWHITE);
-        //    DrawTexture(texture, 0, 0, WHITE);
-        //    DrawText(TextFormat("FPS: %i", GetFPS()), 10, 10, 20, DARKGRAY);
-
-        //EndDrawing();
     }
 
     CloseWindow();
@@ -211,6 +183,8 @@ int main(void)
     free(F_next);
     free(walls);
     free(pixels);
+    free(light_system.lights);
+    free(light_system2.lights);
     UnloadTexture(texture);
 
     return 0;

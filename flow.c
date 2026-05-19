@@ -1,6 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
-
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -27,11 +25,6 @@ void init_F() {
 
 	if (F == NULL || F_next == NULL) return;
 
-	/*for (int i = 0; i < Ny * Nx * NL; i++) {
-		F[i] = 1.0 + 0.01 * randn();
-		F_next[i] = 0.0;
-	}*/
-
 	for (int idx = 0; idx < Ny * Nx; ++idx) {
 		double rho = 1.0 + 1e-6 * randn();
 		int offset = idx * NL;
@@ -54,35 +47,10 @@ double randn(void) {
 	return sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
 }
 
-//void save_velocity_to_csv(int it, int Nx, int Ny, int NL, double* F, int* cxs, int* cys) {
-//	char filename[50];
-//	sprintf(filename, "velocity_%04d.csv", it/plot_every);
-//	FILE* f = fopen(filename, "w");
-//	if (f == NULL) return;
-//
-//	for (int y = 0; y < Ny; y++) {
-//		for (int x = 0; x < Nx; x++) {
-//			double rho = 0, ux = 0, uy = 0;
-//			int cell = (y * Nx + x) * NL;
-//			for (int i = 0; i < NL; i++) {
-//				rho += F[cell + i];
-//				ux += F[cell + i] * cxs[i];
-//				uy += F[cell + i] * cys[i];
-//			}
-//			ux /= rho; uy /= rho;
-//			double v_mag = sqrt(ux * ux + uy * uy);
-//
-//			fprintf(f, "%.6f%s", v_mag, (x == Nx - 1) ? "" : ";");
-//		}
-//		fprintf(f, "\n");
-//	}
-//	fclose(f);
-//}
-
 void calculate(double* F, double* F_next) {
 	int x, y, i;
 
-	// ---------- Коллизия (выполняется до стриминга) ----------
+	// Collision
 	#pragma omp parallel for private(y, x, i) collapse(2)
 	for (y = 0; y < Ny; y++) {
 		for (x = 0; x < Nx; x++) {
@@ -116,7 +84,7 @@ void calculate(double* F, double* F_next) {
 
 	int opp[] = { 0, 5, 6, 7, 8, 1, 2, 3, 4 };
 
-	// ---------- Стриминг с отражением от стенок ----------
+	// Streaming with reflection from the walls
 	#pragma omp parallel for private(x, y, i) collapse(2)
 	for (y = 0; y < Ny; y++) {
 		for (x = 0; x < Nx; x++) {
@@ -145,9 +113,9 @@ void calculate(double* F, double* F_next) {
 		}
 	}
 
-	// ---------- Граничные условия (вход/выход) ----------
+	// Boundary conditions
 	if (area_type == AREA_OUTGOING) {
-		// Выход (x = Nx-1): копируем из внутреннего соседа
+		// Output (x = Nx-1): copy from internal neighbor
 		#pragma omp parallel for private(y, i)
 		for (y = 0; y < Ny; y++) {
 			if (walls[y * Nx + (Nx - 1)]) continue;
@@ -158,7 +126,7 @@ void calculate(double* F, double* F_next) {
 			}
 		}
 
-		// Вход (x == 0): Zou-He с заданной скоростью под углом angle
+		// Input (x == 0): Zou-He with a given speed at an angle
 		double angle = arrow.angle;
 		double ux_in = flow_speed * cos(angle);
 		double uy_in = flow_speed * sin(angle);
@@ -188,7 +156,7 @@ void calculate(double* F, double* F_next) {
 		}
 	}
 
-	// ---------- Копирование F_next в F для всех жидких узлов ----------
+	// Копирование F_next в F для всех жидких узлов
 	#pragma omp parallel for private(x, y, i) collapse(2)
 	for (y = 0; y < Ny; y++) {
 		for (x = 0; x < Nx; x++) {
