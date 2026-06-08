@@ -16,23 +16,26 @@ typedef enum WallType {
 	WALL_FREE
 } WallType;
 
-extern bool* walls;
+typedef struct Walls {
+	bool* walls;
+	WallType wall_type;
+	Vector2 first_wall_line_pos;
+	Color walls_color;
+	float brush_size;
+} Walls;
 
-extern WallType wall_type;
-extern Color walls_color;
-
-extern int WALLS_BASE_LENGTH;
-extern int WALLS_BASE_HIGHT;
+extern const int WALLS_BASE_LENGTH;
+extern const int WALLS_BASE_HIGHT;
 
 double distance(double x1, double y1, double x2, double y2);
-void init_walls(void);
-void walls_update(void);
-void walls_draw(void);
-void set_line_wall(Vector2 first_pos, Vector2 second_pos);
-void set_circle_wall(Vector2 pos, int radius);
-void walls_eraser(Vector2 pos, int radius);
-void load_walls_bmp(void);
-void load_walls_pwal(void);
-void save_walls_pwal(void);
-void set_clogged_walls(void);
-void remove_clogged_walls(void);
+void init_walls(bool** walls);
+void walls_update(Walls* ws);
+void walls_draw(const Walls* ws);
+void set_line_wall(Vector2 first_pos, Vector2 second_pos, Walls* ws);
+void set_circle_wall(Vector2 pos, Walls* ws);
+void walls_eraser(Vector2 pos, Walls* ws);
+void load_walls_bmp(Walls* ws);
+void load_walls_pwal(Walls* ws);
+void save_walls_pwal(const Walls* ws);
+void set_clogged_walls(Walls* ws);
+void remove_clogged_walls(Walls* ws);

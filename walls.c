@@ -3,87 +3,81 @@
 #include "files.h"
 #include "settings.h"
 
-WallType wall_type = WALL_NONE;
-bool* walls = NULL;
-Vector2 first_wall_line_pos = { -1, -1 };
-Color walls_color = { 255, 255, 150, 255 };
-
-int WALLS_BASE_LENGTH = 0;
-int WALLS_BASE_HIGHT = 60;
+const int WALLS_BASE_LENGTH = 0;
+const int WALLS_BASE_HIGHT = 60;
 
 double distance(double x1, double y1, double x2, double y2) {
 	return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
-void walls_update(void) {
+void walls_update(Walls* ws) {
 	Vector2 mouse = GetMousePosition();
-
 	mouse.x -= 50;
 	mouse.y -= 25;
 
 	if (IsKeyPressed(KEY_ESCAPE)) {
-		wall_type = WALL_NONE;
-
-		first_wall_line_pos = (Vector2){ -1, -1 };
+		ws->wall_type = WALL_NONE;
+		ws->first_wall_line_pos = (Vector2){ -1, -1 };
 	}
 
-	if (wall_type == WALL_NONE 
-		|| mouse.x > Nx || mouse.y > Ny || mouse.x < 0 || mouse.y < 0) { return; }
+	if (ws->wall_type == WALL_NONE
+		|| mouse.x > Nx || mouse.y > Ny || mouse.x < 0 || mouse.y < 0) {
+		return;
+	}
 
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-		if (wall_type == WALL_FREE) {
-			set_circle_wall(mouse, brush_size);
+		if (ws->wall_type == WALL_FREE) {
+			set_circle_wall(mouse, ws);
 		}
-		else if (wall_type == WALL_ERASER) {
-			walls_eraser(mouse, brush_size);
+		else if (ws->wall_type == WALL_ERASER) {
+			walls_eraser(mouse, ws);
 		}
 	}
 
 	if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) { return; }
-	else if (wall_type == WALL_CIRCLE) {
-		set_circle_wall(mouse, brush_size);
+	else if (ws->wall_type == WALL_CIRCLE) {
+		set_circle_wall(mouse, ws);
 	}
-	else if (wall_type == WALL_LINE) {
-		if (first_wall_line_pos.x == -1 && first_wall_line_pos.y == -1) {
-			first_wall_line_pos = mouse;
+	else if (ws->wall_type == WALL_LINE) {
+		if (ws->first_wall_line_pos.x == -1 && ws->first_wall_line_pos.y == -1) {
+			ws->first_wall_line_pos = mouse;
 		}
 		else {
-			set_line_wall(first_wall_line_pos, mouse);
-
-			first_wall_line_pos = (Vector2){ -1, -1 };
+			set_line_wall(ws->first_wall_line_pos, mouse, ws);
+			ws->first_wall_line_pos = (Vector2){ -1, -1 };
 		}
 	}
 }
 
-void walls_draw(void) {
+void walls_draw(const Walls* ws) {
 	Vector2 mouse = GetMousePosition();
 
-	if (wall_type == WALL_CIRCLE) {
-		DrawCircleV(mouse, brush_size, walls_color);
+	if (ws->wall_type == WALL_CIRCLE) {
+		DrawCircleV(mouse, ws->brush_size, ws->walls_color);
 	}
-	else if (wall_type == WALL_LINE) {
-		if (first_wall_line_pos.x != -1 && first_wall_line_pos.y != -1) {
-			Vector2 first_screen = { first_wall_line_pos.x + 50, first_wall_line_pos.y + 25 };
-			DrawLineEx(first_screen, mouse, brush_size * 2, walls_color);
-			DrawCircleV(first_screen, brush_size, walls_color);
-			DrawCircleV(mouse, brush_size, walls_color);
+	else if (ws->wall_type == WALL_LINE) {
+		if (ws->first_wall_line_pos.x != -1 && ws->first_wall_line_pos.y != -1) {
+			Vector2 first_screen = { ws->first_wall_line_pos.x + 50, ws->first_wall_line_pos.y + 25 };
+			DrawLineEx(first_screen, mouse, ws->brush_size * 2, ws->walls_color);
+			DrawCircleV(first_screen, ws->brush_size, ws->walls_color);
+			DrawCircleV(mouse, ws->brush_size, ws->walls_color);
 		}
 		else {
-			DrawCircleV(mouse, brush_size, walls_color);
+			DrawCircleV(mouse, ws->brush_size, ws->walls_color);
 		}
 	}
-	else if (wall_type == WALL_FREE) {
-		DrawCircleV(mouse, brush_size, walls_color);
+	else if (ws->wall_type == WALL_FREE) {
+		DrawCircleV(mouse, ws->brush_size, ws->walls_color);
 	}
-	else if (wall_type == WALL_ERASER) {
-		DrawPolyLinesEx(mouse, 36, brush_size, 0, 3, GRAY);
+	else if (ws->wall_type == WALL_ERASER) {
+		DrawPolyLinesEx(mouse, 36, ws->brush_size, 0, 3, GRAY);
 	}
 }
 
-void init_walls(void) {
-	free(walls);
+void init_walls(bool** walls) {
+	free(*walls);
 
-	walls = malloc(Ny * Nx * sizeof(bool));
+	*walls = malloc(Ny * Nx * sizeof(bool));
 
 	//for (int i = 0; i < Ny * Nx; i++) {
 	//	if (i < Nx || i >(Ny - 1) * Nx) {
@@ -95,11 +89,11 @@ void init_walls(void) {
 	//}
 
 	for (int i = 0; i < Ny * Nx; i++) {
-		walls[i] = false;
+		(*walls)[i] = false;
 	}
 }
 
-void set_line_wall(Vector2 first_pos, Vector2 second_pos) {
+void set_line_wall(Vector2 first_pos, Vector2 second_pos, Walls* ws) {
 	for (int x = 0; x < Nx; x++) {
 		for (int y = 0; y < Ny; y++) {
 			float dx = second_pos.x - first_pos.x;
@@ -112,18 +106,18 @@ void set_line_wall(Vector2 first_pos, Vector2 second_pos) {
 			float proj_x = first_pos.x + t * dx;
 			float proj_y = first_pos.y + t * dy;
 
-			if (distance(proj_x, proj_y, x, y) < 20) {
-				walls[y * Nx + x] = true;
+			if (distance(proj_x, proj_y, x, y) < ws->brush_size) {
+				ws->walls[y * Nx + x] = true;
 			}
 		}
 	}
 }
 
-void set_circle_wall(Vector2 pos, int radius) {
+void set_circle_wall(Vector2 pos, Walls* ws) {
 	for (int x = 0; x < Nx; x++) {
 		for (int y = 0; y < Ny; y++) {
-			if (distance(pos.x, pos.y, x, y) < radius) {
-				walls[y * Nx + x] = true;
+			if (distance(pos.x, pos.y, x, y) < ws->brush_size) {
+				ws->walls[y * Nx + x] = true;
 				//for (int i = 0; i < NL; i++) {
 				//	F[(y * Nx + x) * NL + i] = weights[i] * 1; // ρ = 1
 				//}
@@ -133,64 +127,62 @@ void set_circle_wall(Vector2 pos, int radius) {
 	}
 }
 
-void walls_eraser(Vector2 pos, int radius) {
+void walls_eraser(Vector2 pos, Walls* ws) {
 	for (int x = 0; x < Nx; x++) {
 		for (int y = 0; y < Ny; y++) {
-			if (distance(pos.x, pos.y, x, y) < radius) {
-				walls[y * Nx + x] = false;
+			if (distance(pos.x, pos.y, x, y) < ws->brush_size) {
+				ws->walls[y * Nx + x] = false;
 			}
 		}
 	}
 }
 
-void load_walls_bmp(void) {
+void load_walls_bmp(Walls* ws) {
 	char path[260] = "";
 
 	if (get_open_path("Select Walls BMP Map (*.bmp)\0*.bmp\0All Files (*.*)\0*.*\0", "bmp", path, sizeof(path))) {
-		load_bmp(path, walls, Nx * Ny);
+		load_bmp(path, ws->walls, Nx * Ny);
 	}
 }
 
-void load_walls_pwal(void) {
+void load_walls_pwal(Walls* ws) {
 	char path[260] = "";
 
 	if (get_open_path("Select Walls PWAL Map (*.pwal)\0*.pwal\0Select Walls PSIM Map (*.psim)\0*.psim\0All Files (*.*)\0*.*\0", "pwal", path, sizeof(path))) {
 		size_t skip_bytes = 0;
-		printf("12");
-		load_bin(path, walls, sizeof(bool), Nx * Ny, &skip_bytes);
-		printf("43");
+		load_bin(path, ws->walls, sizeof(bool), Nx * Ny, &skip_bytes);
 	}
 }
 
-void save_walls_pwal(void) {
+void save_walls_pwal(const Walls* ws) {
 	char path[260] = "";
 
 	if (get_save_path("Select Walls PWAL Map (*.pwal)\0*.pwal\0All Files (*.*)\0*.*\0", "pwal", path, sizeof(path))) {
 		clear_bin(path);
-		save_bin(path, walls, sizeof(bool), Nx * Ny);
+		save_bin(path, ws->walls, sizeof(bool), Nx * Ny);
 	}
 }
 
-void set_clogged_walls(void) {
-	for (int x = 0; x < Nx; x++) {
-		walls[0 * Nx + x] = true;
-		walls[(Ny - 1) * Nx + x] = true;
-	}
+void set_clogged_walls(Walls* ws) {
+    for (int x = 0; x < Nx; x++) {
+        ws->walls[0 * Nx + x] = true;
+        ws->walls[(Ny - 1) * Nx + x] = true;
+    }
 
-	for (int y = 0; y < Ny; y++) {
-		walls[y * Nx + 0] = true;
-		walls[y * Nx + (Nx - 1)] = true;
-	}
+    for (int y = 0; y < Ny; y++) {
+        ws->walls[y * Nx + 0] = true;
+        ws->walls[y * Nx + (Nx - 1)] = true;
+    }
 }
 
-void remove_clogged_walls(void) {
-	for (int x = 0; x < Nx; x++) {
-		walls[0 * Nx + x] = false;
-		walls[(Ny - 1) * Nx + x] = false;
-	}
+void remove_clogged_walls(Walls* ws) {
+    for (int x = 0; x < Nx; x++) {
+        ws->walls[0 * Nx + x] = false;
+        ws->walls[(Ny - 1) * Nx + x] = false;
+    }
 
-	for (int y = 0; y < Ny; y++) {
-		walls[y * Nx + 0] = false;
-		walls[y * Nx + (Nx - 1)] = false;
-	}
+    for (int y = 0; y < Ny; y++) {
+        ws->walls[y * Nx + 0] = false;
+        ws->walls[y * Nx + (Nx - 1)] = false;
+    }
 }

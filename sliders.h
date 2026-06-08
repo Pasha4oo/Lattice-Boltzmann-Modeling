@@ -2,6 +2,12 @@
 
 #include <raylib.h>
 
+#include "files.h"
+#include "flow.h"
+#include "walls.h"
+#include "lights.h"
+#include "arrow.h"
+
 #define MAX_SLIDERS 32
 
 typedef enum SliderID {
@@ -27,11 +33,9 @@ typedef struct UISliders {
 	int counter;
 } UISliders;
 
-extern UISliders ui_sliders;
-
-Slider create_slider(Rectangle rect, Color bar_color, Color handle_color, SliderID id, float value);
+Slider create_slider(UISliders* ui_sliders, Rectangle rect, Color bar_color, Color handle_color, SliderID id, float value);
 
 void update_slider(Slider* slider);
 void draw_slider(Slider* slider);
-void ui_sliders_update(void);
-void ui_sliders_draw(void);
+void ui_sliders_update(UISliders* ui_sliders, Settings* settings, Walls* walls);
+void ui_sliders_draw(UISliders* ui_sliders);

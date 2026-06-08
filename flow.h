@@ -2,13 +2,19 @@
 
 #include <stdint.h>
 
-extern double* F;
-extern double* F_next;
-extern double max_v;
+#include "walls.h"
+#include "consts.h"
+#include "settings.h"
+#include "arrow.h"
 
-void init_F();
+typedef struct LBM {
+    double* F;
+    double* F_next;
+    double max_v;
+} LBM;
+
+void init_lbm(LBM* lbm);
 double randn(void);
-void calculate(double* F, double* F_next);
+void calculate(LBM* lbm, const Walls* ws, const Settings* settings, const Arrow* arrow);
 void init_openmp(void);
-void push_liquid(double* F, uint8_t direction);
-int init_lbm(void);
+void push_liquid(LBM* lbm, uint8_t direction);

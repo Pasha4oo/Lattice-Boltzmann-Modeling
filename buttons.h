@@ -5,28 +5,18 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "buttons_callback.h"
+#include "walls.h"
+#include "flow.h"
+#include "settings.h"
+#include "lights.h"
+#include "pauser.h"
+#include "files.h"
+#include "arrow.h"
+
 #define MAX_BUTTONS 32
 
-typedef enum ButtonID {
-	BUTTON_PAUSER,
-	BUTTON_RESTART_LIQUID,
-	BUTTON_WALL_CIRCLE,
-	BUTTON_WALL_LINE,
-	BUTTON_WALL_FREE,
-	BUTTON_WALL_NONE,
-	BUTTON_WALL_ERASER,
-	BUTTON_WALL_CLEAR,
-	BUTTON_LOAD_BMP,
-	BUTTON_LOAD_WALL,
-	BUTTON_SAVE_WALL,
-	BUTTON_LOAD_ALL,
-	BUTTON_SAVE_ALL,
-	BUTTON_EXPORT_CSV,
-	BUTTON_FIXATE_VELOCITY,
-	BUTTON_AREA_CLOGGED,
-	BUTTON_AREA_CYCLIC,
-	BUTTON_AREA_OUTGOING
-} ButtonID;
+typedef void (*ButtonCallback)(void* user_data);
 
 typedef struct Button {
 	Rectangle rect;
@@ -37,9 +27,10 @@ typedef struct Button {
 	const char* text;
 	Vector2 text_pos;
 	float text_width;
-	bool pressed;
-	ButtonID id;
 	float press_timer;
+
+	ButtonCallback callback;
+	void* callback_data;
 } Button;
 
 typedef struct UIButtons {
@@ -47,11 +38,12 @@ typedef struct UIButtons {
 	int counter;
 } UIButtons;
 
-extern UIButtons ui_buttons;
-
-Button create_button(Rectangle rect, float rect_roundness, Color rect_color, const char* text, Color text_color, ButtonID id);
+Button create_button(UIButtons* ui_buttons, Rectangle rect, float rect_roundness, Color rect_color, 
+	const char* text, Color text_color, ButtonCallback callback, void* callback_data);
 
 void update_button(Button* button);
 void draw_button(Button* button);
-void ui_buttons_update(void);
-void ui_buttons_draw(void);
+void ui_buttons_update(UIButtons* ui_buttons);
+void ui_buttons_draw(const UIButtons* ui_buttons);
+
+void init_buttons(UIButtons* ui, Walls* ws, LBM* lbm, Pauser* pauser, Arrow* arrow, Settings* settings, LightSystem* light_system);;

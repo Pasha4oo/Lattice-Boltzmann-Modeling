@@ -1,22 +1,22 @@
 ﻿#include "window.h"
 #include "walls.h"
 
-void update_speed_pixels(double* F, uint32_t* pixels, double max_v) {
+void update_speed_pixels(LBM* lbm, Walls* ws, uint32_t* pixels) {
     int y, x, i;
 
     #pragma omp parallel for private(y, x, i) collapse(2)
     for (y = 0; y < Ny; y++) {
         for (x = 0; x < Nx; x++) {
-            if (!walls[y * Nx + x]) {
+            if (!ws->walls[y * Nx + x]) {
                 double rho = 0, ux = 0, uy = 0;
                 int cell = (y * Nx + x) * NL;
                 for (i = 0; i < NL; i++) {
-                    rho += F[cell + i];
-                    ux += F[cell + i] * cxs[i];
-                    uy += F[cell + i] * cys[i];
+                    rho += lbm->F[cell + i];
+                    ux += lbm->F[cell + i] * cxs[i];
+                    uy += lbm->F[cell + i] * cys[i];
                 }
                 ux /= rho; uy /= rho;
-                double v_mag = sqrt(ux * ux + uy * uy) / max_v * 1.7;
+                double v_mag = sqrt(ux * ux + uy * uy) / lbm->max_v * 1.7;
 
                 unsigned char r, g, b;
                 if (v_mag < 0.5) {
@@ -33,13 +33,13 @@ void update_speed_pixels(double* F, uint32_t* pixels, double max_v) {
                 pixels[y * Nx + x] = (255 << 24) | (r << 16) | (g << 8) | b;
             }
             else {
-                pixels[y * Nx + x] = (walls_color.a << 24) | (walls_color.b << 16) | (walls_color.g << 8) | walls_color.r;
+                pixels[y * Nx + x] = (ws->walls_color.a << 24) | (ws->walls_color.b << 16) | (ws->walls_color.g << 8) | ws->walls_color.r;
             }
         }
     }
 }
 
-void update_max_v(double* max_v, double* F) {
+void update_max_v(LBM* lbm) {
     double current_max = 0.0f;
     int x, y, i;
     for (y = 0; y < Ny; y++) {
@@ -47,9 +47,9 @@ void update_max_v(double* max_v, double* F) {
             double rho = 0, ux = 0, uy = 0;
             int cell = (y * Nx + x) * NL;
             for (i = 0; i < NL; i++) {
-                rho += F[cell + i];
-                ux += F[cell + i] * cxs[i];
-                uy += F[cell + i] * cys[i];
+                rho += lbm->F[cell + i];
+                ux += lbm->F[cell + i] * cxs[i];
+                uy += lbm->F[cell + i] * cys[i];
             }
             ux /= rho; uy /= rho;
             double v = sqrt(ux * ux + uy * uy);
@@ -57,6 +57,6 @@ void update_max_v(double* max_v, double* F) {
         }
     }
 
-    *max_v = 0.9 * (*max_v) + 0.1 * current_max; //0.9
-    if (*max_v < 1e-12) *max_v = 1e-12;
+    lbm->max_v = 0.9 * (lbm->max_v) + 0.1 * current_max; //0.9
+    if (lbm->max_v < 1e-12) lbm->max_v = 1e-12;
 }

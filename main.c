@@ -9,6 +9,7 @@
 #include "window.h"
 #include "flow.h"
 #include "buttons.h"
+#include "buttons_callback.h"
 #include "walls.h"
 #include "files.h"
 #include "lights.h"
@@ -19,17 +20,47 @@
 
 int main(void)
 {
+    LBM lbm = {
+        .F = NULL,
+        .F_next = NULL,
+        .max_v = 1e-12
+    };
+
+    Walls walls = {
+        .walls = NULL,
+        .first_wall_line_pos = (Vector2){ -1, -1 },
+        .walls_color = (Color){ 255, 255, 150, 255 },
+        .wall_type = WALL_NONE,
+        .brush_size = 14.0f
+    };
+
+    Pauser pauser = {
+        .is_playing = true,
+        .pos = (Vector2) { Nx + 147, 50},
+        .size = (Vector2) { 45.0f, 45.0f }
+    };
+
+    Settings settings = {
+        .area_type = AREA_OUTGOING,
+        .flow_speed = 0.07f,
+        .tau = .57, //0.53
+        .fixate = false
+    };
+
+    UIButtons ui_buttons = { 0 };
+    UISliders ui_sliders = { 0 };
+
     srand(time(NULL));
 
     init_openmp();
 
-    init_F();
+    init_lbm(&lbm);
 
     //push_liquid(F, 3);
 
-    init_walls();
+    init_walls(&walls.walls);
 
-    set_circle_wall((Vector2) { Nx / 2, Ny / 2 }, 60);
+    set_circle_wall((Vector2) { Nx / 2, Ny / 2 }, &walls);
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LBM");
 
@@ -42,42 +73,21 @@ int main(void)
 
     uint32_t* pixels = (uint32_t*)malloc(Nx * Ny * sizeof(uint32_t));
 
-    create_button((Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "CIRCLE", BLUE, BUTTON_WALL_CIRCLE);
-    create_button((Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "FREE", BLUE, BUTTON_WALL_FREE);
-    create_button((Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "LINE", BLUE, BUTTON_WALL_LINE);
-    create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, BLUE, "ERASE", BLUE, BUTTON_WALL_ERASER);
-    create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "NONE", BLUE, BUTTON_WALL_NONE);
-    create_button((Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, RED, "CLEAR", BLUE, BUTTON_WALL_CLEAR);
-    create_button((Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, BLUE, "BMP", BLUE, BUTTON_LOAD_BMP);
-    create_button((Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "LOAD", BLUE, BUTTON_LOAD_WALL);
-    create_button((Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "SAVE", BLUE, BUTTON_SAVE_WALL);
-    
-    create_button((Rectangle) { Nx + 130, 35, 80, 80 }, 0.4f, BROWN, "", BLUE, BUTTON_PAUSER);
-    create_button((Rectangle) { Nx + 120, 180, 80, 50 }, 0.4f, RED, "RESET", BLUE, BUTTON_RESTART_LIQUID);
-   
-    create_button((Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "CLOG", BLUE, BUTTON_AREA_CLOGGED);
-    create_button((Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "CYCLIC", BLUE, BUTTON_AREA_CYCLIC);
-    create_button((Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, ORANGE, "OUT", BLUE, BUTTON_AREA_OUTGOING);
-    create_button((Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "LOAD", BLUE, BUTTON_LOAD_ALL);
-    create_button((Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, DARKGREEN, "SAVE", BLUE, BUTTON_SAVE_ALL);
-    create_button((Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT, 80, 50 }, 0.4f, BLUE, "SCV", BLUE, BUTTON_EXPORT_CSV);
+    Arrow arrow = create_arrow((Vector2) { 60 + Nx + ARROW_BASE_LENGTH, 150 + Ny + ARROW_BASE_HIGHT }, 100.0f, RAYWHITE);
 
-    create_button((Rectangle) { 10 + Nx + TAU_BASE_LENGTH, 230 + TAU_BASE_HIGHT, 50, 30 }, 0.4f, BLUE, "FIX", BLUE, BUTTON_FIXATE_VELOCITY);
 
-    light_system = (LightSystem){ NULL, -1, 0 };
+    LightSystem light_system = (LightSystem){ NULL, -1, 0 };
     create_light(&light_system, (Vector2) { 55 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT + 25.0f });
     create_light(&light_system, (Vector2) { 55 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT + 25.0f });
     create_light(&light_system, (Vector2) { 55 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT + 25.0f });
     light_system.enabled_index = 2;
 
-    light_system2 = (LightSystem){ NULL, -1, 0 };
+    init_buttons(&ui_buttons, &walls, &lbm, &pauser, &arrow, &settings, &light_system);
+
+    LightSystem light_system2 = (LightSystem){ NULL, -1, 0 };
     create_light(&light_system2, (Vector2) { 130 + Nx + TAU_BASE_LENGTH, 80 + TAU_BASE_HIGHT + 25.0f });
 
-    create_slider((Rectangle) { 360 + WALLS_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_BRUSH, 0.5f);
-    create_slider((Rectangle) { 275 + FILES_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_SPEED, 0.5f);
-    create_slider((Rectangle) { 140 + Nx + TAU_BASE_LENGTH, 155 + TAU_BASE_HIGHT, 15, 110 }, ORANGE, DARKBROWN, SLIDER_TAU, 0.05825f);
-
-    arrow = create_arrow((Vector2) { 60 + Nx + ARROW_BASE_LENGTH, 150 + Ny + ARROW_BASE_HIGHT }, 100.0f, RAYWHITE);
+    init_sliders(&ui_sliders, &walls, &settings);
 
     float timer = 0.0f;
 
@@ -86,15 +96,15 @@ int main(void)
 
     while (!WindowShouldClose())
     {
-        if (is_playing) { calculate(F, F_next); }
+        if (pauser.is_playing) { calculate(&lbm, &walls, &settings, &arrow); }
 
         timer += GetFrameTime();
 
         if (timer >= 0.2f) {
             SetWindowTitle(TextFormat("FPS: %i", GetFPS()));
 
-            if (is_playing && !fixate) { update_max_v(&max_v, F); }
-            if (max_v > 200 && !explode_flicker) {
+            if (pauser.is_playing && !settings.fixate) { update_max_v(&lbm); }
+            if (lbm.max_v > 200 && !explode_flicker) {
                 light_system2.enabled_index = 0; 
                 explode_flicker = true;
             }
@@ -103,18 +113,18 @@ int main(void)
                 explode_flicker = false;
             }
 
-            printf("local_max = %e\n", max_v);
-            printf("tau = %e\n", tau);
+            printf("local_max = %e\n", lbm.max_v);
+            printf("tau = %e\n", settings.tau);
 
             timer = 0.0f;
         }
 
-        update_speed_pixels(F, pixels, max_v);
+        update_speed_pixels(&lbm, &walls, pixels);
         UpdateTexture(texture, pixels);
 
         update_arrow(&arrow);
-        ui_buttons_update();
-        ui_sliders_update();
+        ui_buttons_update(&ui_buttons);
+        ui_sliders_update(&ui_sliders, &settings, &walls);
 
         BeginDrawing();
             ClearBackground((Color) { 172, 155, 135, 255 });
@@ -129,14 +139,14 @@ int main(void)
             DrawRectangleRounded((Rectangle) { 35 + WALLS_BASE_LENGTH, Ny + 10 + WALLS_BASE_HIGHT, 410, 180 }, 0.1f, 5, BROWN);
             DrawText("Walls", 390 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 15, RAYWHITE);
             DrawText("Brush \nSize:", 390 + WALLS_BASE_LENGTH, Ny + 70 + WALLS_BASE_HIGHT, 15, RAYWHITE);
-            DrawText(TextFormat("%d p", (int)(brush_size)), 390 + WALLS_BASE_LENGTH, Ny + 110 + WALLS_BASE_HIGHT, 19, RAYWHITE);
+            DrawText(TextFormat("%d p", (int)(walls.brush_size)), 390 + WALLS_BASE_LENGTH, Ny + 110 + WALLS_BASE_HIGHT, 19, RAYWHITE);
 
             DrawRectangleRounded((Rectangle) { 20 + FILES_BASE_LENGTH, Ny + 10 + FILES_BASE_HIGHT, 355, 190 }, 0.1f, 5, DARKBROWN);
             DrawRectangleRounded((Rectangle) { 35 + FILES_BASE_LENGTH, Ny + 10 + FILES_BASE_HIGHT, 340, 180 }, 0.1f, 5, BROWN);
             DrawText("Settings", 265 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 15, RAYWHITE);
             DrawText("Flow \nSpeed:", 305 + FILES_BASE_LENGTH, Ny + 70 + FILES_BASE_HIGHT, 15, RAYWHITE);
-            if (area_type == AREA_OUTGOING) {
-                DrawText(TextFormat("%.2f", (flow_speed)), 305 + FILES_BASE_LENGTH, Ny + 110 + FILES_BASE_HIGHT, 19, RAYWHITE);
+            if (settings.area_type == AREA_OUTGOING) {
+                DrawText(TextFormat("%.2f", (settings.flow_speed)), 305 + FILES_BASE_LENGTH, Ny + 110 + FILES_BASE_HIGHT, 19, RAYWHITE);
             }
             else {
                 DrawText("0", 305 + FILES_BASE_LENGTH, Ny + 110 + FILES_BASE_HIGHT, 19, RED);
@@ -154,34 +164,34 @@ int main(void)
             DrawRectangleRounded((Rectangle) { 35 + Nx + TAU_BASE_LENGTH - 40, 50 + TAU_BASE_HIGHT, 180, 230 }, 0.1f, 5, BROWN);
             DrawText("Flow", 120 + Nx + TAU_BASE_LENGTH, 60 + TAU_BASE_HIGHT, 15, RAYWHITE);
             DrawText("TAU:", 85 + Nx + TAU_BASE_LENGTH, 170 + TAU_BASE_HIGHT, 19, RAYWHITE);
-            DrawText(TextFormat("%.2f", (tau)), 90 + Nx + TAU_BASE_LENGTH, 200 + TAU_BASE_HIGHT, 19, RAYWHITE);
+            DrawText(TextFormat("%.2f", (settings.tau)), 90 + Nx + TAU_BASE_LENGTH, 200 + TAU_BASE_HIGHT, 19, RAYWHITE);
 
             DrawText("Max", 15 + Nx + TAU_BASE_LENGTH, 160 + TAU_BASE_HIGHT, 19, RAYWHITE);
             DrawText("Vel:", 15 + Nx + TAU_BASE_LENGTH, 180 + TAU_BASE_HIGHT, 19, RAYWHITE);
-            if (fixate) {
-                DrawText(TextFormat("%.3f", (max_v)), 15 + Nx + TAU_BASE_LENGTH, 205 + TAU_BASE_HIGHT, 19, RED);
+            if (settings.fixate) {
+                DrawText(TextFormat("%.3f", (lbm.max_v)), 15 + Nx + TAU_BASE_LENGTH, 205 + TAU_BASE_HIGHT, 19, RED);
             }
             else {
-                DrawText(TextFormat("%.3f", (max_v)), 15 + Nx + TAU_BASE_LENGTH, 205 + TAU_BASE_HIGHT, 19, RAYWHITE);
+                DrawText(TextFormat("%.3f", (lbm.max_v)), 15 + Nx + TAU_BASE_LENGTH, 205 + TAU_BASE_HIGHT, 19, RAYWHITE);
             }
 
             ui_lights_draw(&light_system2);
 
             DrawRectangleRounded((Rectangle) { Nx + 120, 35, 90, 90 }, 0.4f, 5, DARKBROWN);
-            ui_buttons_draw();
-            draw_pauser((Vector2) { Nx + 147, 50}, (Vector2) { 45.0f, 45.0f });
-            ui_sliders_draw();
-            walls_draw();
+            ui_buttons_draw(&ui_buttons);
+            draw_pauser(&pauser);
+            ui_sliders_draw(&ui_sliders);
+            walls_draw(&walls);
         EndDrawing();
 
-        walls_update();
+        walls_update(&walls);
     }
 
     CloseWindow();
 
-    free(F);
-    free(F_next);
-    free(walls);
+    free(lbm.F);
+    free(lbm.F_next);
+    free(walls.walls);
     free(pixels);
     free(light_system.lights);
     free(light_system2.lights);

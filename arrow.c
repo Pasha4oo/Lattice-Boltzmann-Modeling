@@ -1,10 +1,7 @@
 ﻿#include "arrow.h"
 
-Arrow arrow;
-static Vector2 mouse;
-
-int ARROW_BASE_LENGTH = 60;
-int ARROW_BASE_HIGHT = 0;
+int const ARROW_BASE_LENGTH = 60;
+int const ARROW_BASE_HIGHT = 0;
 
 Arrow create_arrow(Vector2 center, float length, Color color) {
     return (Arrow) {
@@ -36,7 +33,7 @@ static void draw_arrow_scale(Arrow* arrow) {
 }
 
 void update_arrow(Arrow* arrow) {
-    mouse = GetMousePosition();
+    Vector2 mouse = GetMousePosition();
 
     Vector2 arrow_end = {
         arrow->center.x + cosf(arrow->angle) * arrow->length,

@@ -1,4 +1,6 @@
-﻿#include <stdio.h>
+﻿#include "flow.h"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -6,35 +8,25 @@
 #include <math.h>
 #include <omp.h>
 
-#include "flow.h"
-#include "consts.h"
-#include "settings.h"
-#include "walls.h"
-#include "arrow.h"
+void init_lbm(LBM* lbm) {
+	free(lbm->F);
+	free(lbm->F_next);
 
-double* F = NULL;
-double* F_next = NULL;
-double max_v = 1e-12;
+	lbm->F = malloc(Ny * Nx * NL * sizeof(double));
+	lbm->F_next = malloc(Ny * Nx * NL * sizeof(double));
 
-void init_F() {
-	free(F);
-	free(F_next);
-
-	F = malloc(Ny * Nx * NL * sizeof(double));
-	F_next = malloc(Ny * Nx * NL * sizeof(double));
-
-	if (F == NULL || F_next == NULL) return;
+	if (lbm->F == NULL || lbm->F_next == NULL) return;
 
 	for (int idx = 0; idx < Ny * Nx; ++idx) {
 		double rho = 1.0 + 1e-6 * randn();
 		int offset = idx * NL;
 		for (int dir = 0; dir < NL; ++dir) {
-			F[offset + dir] = weights[dir] * rho;
+			lbm->F[offset + dir] = weights[dir] * rho;
 		}
 	}
 
 	for (int i = 0; i < Ny * Nx * NL; ++i) {
-		F_next[i] = 0.0;
+		lbm->F_next[i] = 0.0;
 	}
 }
 
@@ -47,19 +39,19 @@ double randn(void) {
 	return sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
 }
 
-void calculate(double* F, double* F_next) {
+void calculate(LBM* lbm, const Walls* ws, const Settings* settings, const Arrow* arrow) {
 	int x, y, i;
 
 	// Collision
 	#pragma omp parallel for private(y, x, i) collapse(2)
 	for (y = 0; y < Ny; y++) {
 		for (x = 0; x < Nx; x++) {
-			if (walls[y * Nx + x]) continue;
+			if (ws->walls[y * Nx + x]) continue;
 			int cellOffset = (y * Nx + x) * NL;
 
 			double rho = 0.0, ux = 0.0, uy = 0.0;
 			for (i = 0; i < NL; i++) {
-				double val = F[cellOffset + i];
+				double val = lbm->F[cellOffset + i];
 				rho += val;
 				ux += val * cxs[i];
 				uy += val * cys[i];
@@ -77,7 +69,7 @@ void calculate(double* F, double* F_next) {
 				double cu = cxs[i] * ux + cys[i] * uy;
 				double feq = weights[i] * rho *
 					(1.0 + 3.0 * cu + 4.5 * cu * cu - 1.5 * u_sq);
-				F[cellOffset + i] = F[cellOffset + i] - (1.0 / tau) * (F[cellOffset + i] - feq);
+				lbm->F[cellOffset + i] = lbm->F[cellOffset + i] - (1.0 / settings->tau) * (lbm->F[cellOffset + i] - feq);
 			}
 		}
 	}
@@ -88,60 +80,60 @@ void calculate(double* F, double* F_next) {
 	#pragma omp parallel for private(x, y, i) collapse(2)
 	for (y = 0; y < Ny; y++) {
 		for (x = 0; x < Nx; x++) {
-			if (walls[y * Nx + x]) continue;
+			if (ws->walls[y * Nx + x]) continue;
 
 			for (i = 0; i < NL; i++) {
 				int next_x = x + cxs[i];
 				int next_y = y + cys[i];
 
-				if (area_type == AREA_CYCLIC || area_type == AREA_CLOGGED) {
+				if (settings->area_type == AREA_CYCLIC || settings->area_type == AREA_CLOGGED) {
 					next_x = (next_x + Nx) % Nx;
 					next_y = (next_y + Ny) % Ny;
 				}
-				else if (area_type == AREA_OUTGOING) {
+				else if (settings->area_type == AREA_OUTGOING) {
 					next_y = (next_y + Ny) % Ny;
 					if (next_x < 0 || next_x >= Nx) continue;
 				}
 
-				if (walls[next_y * Nx + next_x]) {
-					F_next[(y * Nx + x) * NL + opp[i]] = F[(y * Nx + x) * NL + i];
+				if (ws->walls[next_y * Nx + next_x]) {
+					lbm->F_next[(y * Nx + x) * NL + opp[i]] = lbm->F[(y * Nx + x) * NL + i];
 				}
 				else {
-					F_next[(next_y * Nx + next_x) * NL + i] = F[(y * Nx + x) * NL + i];
+					lbm->F_next[(next_y * Nx + next_x) * NL + i] = lbm->F[(y * Nx + x) * NL + i];
 				}
 			}
 		}
 	}
 
 	// Boundary conditions
-	if (area_type == AREA_OUTGOING) {
+	if (settings->area_type == AREA_OUTGOING) {
 		// Output (x = Nx-1): copy from internal neighbor
 		#pragma omp parallel for private(y, i)
 		for (y = 0; y < Ny; y++) {
-			if (walls[y * Nx + (Nx - 1)]) continue;
+			if (ws->walls[y * Nx + (Nx - 1)]) continue;
 			int idx_out = (y * Nx + (Nx - 1)) * NL;
 			int idx_in = (y * Nx + (Nx - 2)) * NL;
 			for (i = 0; i < NL; i++) {
-				F_next[idx_out + i] = F_next[idx_in + i];
+				lbm->F_next[idx_out + i] = lbm->F_next[idx_in + i];
 			}
 		}
 
 		// Input (x == 0): Zou-He with a given speed at an angle
-		double angle = arrow.angle;
-		double ux_in = flow_speed * cos(angle);
-		double uy_in = flow_speed * sin(angle);
+		double angle = arrow->angle;
+		double ux_in = settings->flow_speed * cos(angle);
+		double uy_in = settings->flow_speed * sin(angle);
 
 		#pragma omp parallel for private(y)
 		for (y = 0; y < Ny; y++) {
-			if (walls[y * Nx + 0]) continue;
+			if (ws->walls[y * Nx + 0]) continue;
 			int idx = (y * Nx + 0) * NL;
 
-			double f0 = F_next[idx + 0];
-			double f1 = F_next[idx + 1];
-			double f5 = F_next[idx + 5];
-			double f6 = F_next[idx + 6];
-			double f7 = F_next[idx + 7];
-			double f8 = F_next[idx + 8];
+			double f0 = lbm->F_next[idx + 0];
+			double f1 = lbm->F_next[idx + 1];
+			double f5 = lbm->F_next[idx + 5];
+			double f6 = lbm->F_next[idx + 6];
+			double f7 = lbm->F_next[idx + 7];
+			double f8 = lbm->F_next[idx + 8];
 
 			double rho = (f0 + f1 + f5 +
 				2.0 * (f6 + f7 + f8)) / (1.0 - ux_in);
@@ -150,9 +142,9 @@ void calculate(double* F, double* F_next) {
 			double f2 = f6 + (1.0 / 6.0) * rho * (ux_in + uy_in);
 			double f4 = f8 + (1.0 / 6.0) * rho * (ux_in - uy_in);
 
-			F_next[idx + 2] = f2;
-			F_next[idx + 3] = f3;
-			F_next[idx + 4] = f4;
+			lbm->F_next[idx + 2] = f2;
+			lbm->F_next[idx + 3] = f3;
+			lbm->F_next[idx + 4] = f4;
 		}
 	}
 
@@ -160,10 +152,10 @@ void calculate(double* F, double* F_next) {
 	#pragma omp parallel for private(x, y, i) collapse(2)
 	for (y = 0; y < Ny; y++) {
 		for (x = 0; x < Nx; x++) {
-			if (walls[y * Nx + x]) continue;
+			if (ws->walls[y * Nx + x]) continue;
 			int offset = (y * Nx + x) * NL;
 			for (i = 0; i < NL; i++) {
-				F[offset + i] = F_next[offset + i];
+				lbm->F[offset + i] = lbm->F_next[offset + i];
 			}
 		}
 	}
@@ -179,11 +171,11 @@ void init_openmp(void) {
 	}
 }
 
-void push_liquid(double* F, uint8_t direction) {
+void push_liquid(LBM* lbm, uint8_t direction) {
 	for (int y = 0; y < Ny; y++) {
 		for (int x = 0; x < Nx; x++) {
 			int index = (y * Nx + x) * NL + direction;
-			F[index] = 0.01;	
+			lbm->F[index] = 0.01;
 		}
 	}
 }

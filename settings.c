@@ -2,59 +2,53 @@
 
 #include <locale.h>
 
-#include "files.h"
-#include "flow.h"
-#include "walls.h"
 #include "lights.h"
+#include "flow.h"
 #include "arrow.h"
+#include "files.h"
+#include "walls.h"
 
-int TAU_BASE_LENGTH = 100;
-int TAU_BASE_HIGHT = 100;
+int const TAU_BASE_LENGTH = 100;
+int const TAU_BASE_HIGHT = 100;
 
-AreaType area_type = AREA_OUTGOING;
-float brush_size = 14.0f;
-float flow_speed = 0.07f;
-double tau = .57; //0.53
-bool fixate = false;
-
-void load_all_psim() {
+void load_all_psim(Walls* ws, LBM* lbm, Arrow* arrow, Settings* settings, LightSystem* light_system) {
 	char path[260] = "";
 
 	if (get_open_path("Select Walls PSIM Map (*.psim)\0*.psim\0All Files (*.*)\0*.*\0", "psim", path, sizeof(path))) {
 		size_t skip_bytes = 0;
-		load_bin(path, walls, sizeof(bool), Nx * Ny, &skip_bytes);
-		load_bin(path, F, sizeof(double), Nx * Ny * NL, &skip_bytes);
-		load_bin(path, &area_type, sizeof(AreaType), 1, &skip_bytes);
-		load_bin(path, &brush_size, sizeof(float), 1, &skip_bytes);
-		load_bin(path, &flow_speed, sizeof(float), 1, &skip_bytes);
-		load_bin(path, &light_system.enabled_index, sizeof(int), 1, &skip_bytes);
-		load_bin(path, &arrow.angle, sizeof(float), 1, &skip_bytes);
-		load_bin(path, &tau, sizeof(double), 1, &skip_bytes);
-		load_bin(path, &fixate, sizeof(bool), 1, &skip_bytes);
-		load_bin(path, &max_v, sizeof(double), 1, &skip_bytes);
+		load_bin(path, ws->walls, sizeof(bool), Nx * Ny, &skip_bytes);
+		load_bin(path, lbm->F, sizeof(double), Nx * Ny * NL, &skip_bytes);
+		load_bin(path, &settings->area_type, sizeof(AreaType), 1, &skip_bytes);
+		load_bin(path, &ws->brush_size, sizeof(float), 1, &skip_bytes);
+		load_bin(path, &settings->flow_speed, sizeof(float), 1, &skip_bytes);
+		load_bin(path, &light_system->enabled_index, sizeof(int), 1, &skip_bytes);
+		load_bin(path, &arrow->angle, sizeof(float), 1, &skip_bytes);
+		load_bin(path, &settings->tau, sizeof(double), 1, &skip_bytes);
+		load_bin(path, &settings->fixate, sizeof(bool), 1, &skip_bytes);
+		load_bin(path, &lbm->max_v, sizeof(double), 1, &skip_bytes);
 	}
 }
 
-void save_all_psim() {
+void save_all_psim(Walls* ws, LBM* lbm, Arrow* arrow, Settings* settings, LightSystem* light_system) {
 	char path[260] = "";
 
 	if (get_save_path("Select Walls PSIM Map (*.psim)\0*.psim\0All Files (*.*)\0*.*\0", "psim", path, sizeof(path))) {
 		clear_bin(path);
 
-		save_bin(path, walls, sizeof(bool), Nx * Ny);
-		save_bin(path, F, sizeof(double), Nx * Ny * NL);
-		save_bin(path, &area_type, sizeof(AreaType), 1);
-		save_bin(path, &brush_size, sizeof(float), 1);
-		save_bin(path, &flow_speed, sizeof(float), 1);
-		save_bin(path, &light_system.enabled_index, sizeof(int), 1);
-		save_bin(path, &arrow.angle, sizeof(float), 1);
-		save_bin(path, &tau, sizeof(double), 1);
-		save_bin(path, &fixate, sizeof(bool), 1);
-		save_bin(path, &max_v, sizeof(double), 1);
+		save_bin(path, ws->walls, sizeof(bool), Nx * Ny);
+		save_bin(path, lbm->F, sizeof(double), Nx * Ny * NL);
+		save_bin(path, &settings->area_type, sizeof(AreaType), 1);
+		save_bin(path, &ws->brush_size, sizeof(float), 1);
+		save_bin(path, &settings->flow_speed, sizeof(float), 1);
+		save_bin(path, &light_system->enabled_index, sizeof(int), 1);
+		save_bin(path, &arrow->angle, sizeof(float), 1);
+		save_bin(path, &settings->tau, sizeof(double), 1);
+		save_bin(path, &settings->fixate, sizeof(bool), 1);
+		save_bin(path, &lbm->max_v, sizeof(double), 1);
 	}
 }
 
-void export_velocity_csv() {
+void export_velocity_csv(LBM* lbm) {
 	char path[260] = "";
 
 	if (!get_save_path("Select CSV File (*.csv)\0*.csv\0All Files (*.*)\0*.*\0", "csv", path, sizeof(path))) return;
@@ -69,9 +63,9 @@ void export_velocity_csv() {
 			double rho = 0, ux = 0, uy = 0;
 			int cell = (y * Nx + x) * NL;
 			for (int i = 0; i < NL; i++) {
-				rho += F[cell + i];
-				ux += F[cell + i] * cxs[i];
-				uy += F[cell + i] * cys[i];
+				rho += lbm->F[cell + i];
+				ux += lbm->F[cell + i] * cxs[i];
+				uy += lbm->F[cell + i] * cys[i];
 			}
 			ux /= rho; uy /= rho;
 			double v_mag = sqrt(ux * ux + uy * uy);

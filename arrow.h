@@ -2,8 +2,9 @@
 
 #include <raylib.h>
 #include <math.h>
+#include <stdbool.h>
 
-typedef struct {
+typedef struct Arrow {
     Vector2 center;
     float length;
     float angle;
@@ -11,9 +12,8 @@ typedef struct {
     Color color;
 } Arrow;
 
-extern Arrow arrow;
-extern int ARROW_BASE_LENGTH;
-extern int ARROW_BASE_HIGHT;
+extern const int ARROW_BASE_LENGTH;
+extern const int ARROW_BASE_HIGHT;
 
 Arrow create_arrow(Vector2 center, float length, Color color);
 void update_arrow(Arrow* arrow);

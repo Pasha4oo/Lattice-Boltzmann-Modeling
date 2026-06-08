@@ -6,6 +6,7 @@
 #include <omp.h>
 
 #include "consts.h"
+#include "flow.h"
 
-void update_speed_pixels(double* F, uint32_t* pixels, double max_v);
-void update_max_v(double* max_v, double* F);
+void update_speed_pixels(LBM* lbm, Walls* ws, uint32_t* pixels);
+void update_max_v(LBM* lbm);

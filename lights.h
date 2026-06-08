@@ -14,9 +14,6 @@ typedef struct LightSystem {
 	int lights_count;
 } LightSystem;
 
-extern LightSystem light_system;
-extern LightSystem light_system2;
-
 void enable_light(LightSystem* light_system, int enable_index);
 void create_light(LightSystem* light_system, Vector2 pos);
 void ui_lights_draw(LightSystem* light_system);

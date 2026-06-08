@@ -1,34 +1,32 @@
 ﻿#include "pauser.h"
 
-bool is_playing = true;
-
-void switch_pauser(void) {
-	if (is_playing) {
-		is_playing = false;
+void switch_pauser(Pauser* pauser) {
+	if (pauser->is_playing) {
+        pauser->is_playing = false;
 	}
 	else {
-		is_playing = true;
+        pauser->is_playing = true;
 	}
 }
 
-void draw_pauser(Vector2 pos, Vector2 size) {
-    if (is_playing) {
-        float bar_width = size.x * 0.35f;
-        float gap = size.x * 0.30f;
+void draw_pauser(const Pauser* pauser) {
+    if (pauser->is_playing) {
+        float bar_width = pauser->size.x * 0.35f;
+        float gap = pauser->size.x * 0.30f;
         float roundness = 0.8f;
 
-        Rectangle left_bar = { pos.x, pos.y, bar_width, size.y };
+        Rectangle left_bar = { pauser->pos.x, pauser->pos.y, bar_width, pauser->size.y };
         DrawRectangleRounded(left_bar, roundness, 4, RED);
 
-        Rectangle right_bar = { pos.x + bar_width + gap, pos.y, bar_width, size.y };
+        Rectangle right_bar = { pauser->pos.x + bar_width + gap, pauser->pos.y, bar_width, pauser->size.y };
         DrawRectangleRounded(right_bar, roundness, 4, RED);
     }
     else {
-        Vector2 p1 = { pos.x, pos.y };
-        Vector2 p2 = { pos.x, pos.y + size.y };
-        Vector2 p3 = { pos.x + size.x, pos.y + size.y / 2.0f };
+        Vector2 p1 = { pauser->pos.x, pauser->pos.y };
+        Vector2 p2 = { pauser->pos.x, pauser->pos.y + pauser->size.y };
+        Vector2 p3 = { pauser->pos.x + pauser->size.x, pauser->pos.y + pauser->size.y / 2.0f };
 
-        float ball_radius = size.x * 0.10f;
+        float ball_radius = pauser->size.x * 0.10f;
         Color color = (Color){ 0, 185, 39, 255 };
 
         DrawCircleV(p1, ball_radius, color);

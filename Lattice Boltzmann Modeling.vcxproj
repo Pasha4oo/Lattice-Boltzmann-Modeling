@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="arrow.c" />
+    <ClCompile Include="buttons_callback.c" />
     <ClCompile Include="consts.c" />
     <ClCompile Include="files.c" />
     <ClCompile Include="lights.c" />
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arrow.h" />
+    <ClInclude Include="buttons_callback.h" />
     <ClInclude Include="consts.h" />
     <ClInclude Include="flow.h" />
     <ClInclude Include="files.h" />

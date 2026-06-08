@@ -1,8 +1,6 @@
 ﻿#include "sliders.h"
-#include "settings.h"
 
-UISliders ui_sliders = { 0 };
-static Vector2 mouse;
+#include "settings.h"
 
 static void recalculate_slider_handle(Slider* slider) {
     float handle_width = slider->rect.width + 8.0f;
@@ -14,7 +12,7 @@ static void recalculate_slider_handle(Slider* slider) {
     slider->handle_rect.height = handle_height;
 }
 
-Slider create_slider(Rectangle rect, Color bar_color, Color handle_color, SliderID id, float value) {
+Slider create_slider(UISliders* ui_sliders, Rectangle rect, Color bar_color, Color handle_color, SliderID id, float value) {
 	Slider slider = (Slider)
 	{
 		.rect = rect,
@@ -29,14 +27,16 @@ Slider create_slider(Rectangle rect, Color bar_color, Color handle_color, Slider
 
     recalculate_slider_handle(&slider);
 
-	if (ui_sliders.counter < MAX_SLIDERS) {
-		ui_sliders.sliders[ui_sliders.counter++] = slider;
+	if (ui_sliders->counter < MAX_SLIDERS) {
+		ui_sliders->sliders[ui_sliders->counter++] = slider;
 	}
 
 	return slider;
 }
 
 void update_slider(Slider* slider) {
+    Vector2 mouse = GetMousePosition();
+
     if (slider->is_dragging) {
         slider->target_color = Fade(slider->base_color, 0.4f);
 
@@ -79,25 +79,32 @@ void draw_slider(Slider* slider) {
     DrawRectangleRounded(slider->handle_rect, 0.4f, 4, slider->render_color);
 }
 
-void ui_sliders_update(void) {
-    mouse = GetMousePosition();
+void ui_sliders_update(UISliders* ui_sliders, Settings* settings, Walls* walls) {
+    for (int i = 0; i < ui_sliders->counter; i++) {
+        update_slider(&ui_sliders->sliders[i]);
 
-    for (int i = 0; i < ui_sliders.counter; i++) {
-        update_slider(&ui_sliders.sliders[i]);
-
-        if (ui_sliders.sliders[i].is_dragging) {
-            switch (ui_sliders.sliders[i].id) {
-                case SLIDER_BRUSH:           brush_size = ui_sliders.sliders[i].value * 20 + 4; break;
-                case SLIDER_SPEED:           flow_speed = ui_sliders.sliders[i].value * 0.14; break;
-                case SLIDER_TAU:           tau = ui_sliders.sliders[i].value * 1.2 + 0.5001; break;
+        if (ui_sliders->sliders[i].is_dragging) {
+            switch (ui_sliders->sliders[i].id) {
+                case SLIDER_BRUSH:           walls->brush_size = ui_sliders->sliders[i].value * 20 + 4; break;
+                case SLIDER_SPEED:           settings->flow_speed = ui_sliders->sliders[i].value * 0.14; break;
+                case SLIDER_TAU:           settings->tau = ui_sliders->sliders[i].value * 1.2 + 0.5001; break;
 
                 }
         }
     }
 }
 
-void ui_sliders_draw(void) {
-    for (int i = 0; i < ui_sliders.counter; i++) {
-        draw_slider(&ui_sliders.sliders[i]);
+void ui_sliders_draw(UISliders* ui_sliders) {
+    for (int i = 0; i < ui_sliders->counter; i++) {
+        draw_slider(&ui_sliders->sliders[i]);
     }
+}
+
+void init_sliders(UISliders* ui, Walls* walls, Settings* settings) {
+    create_slider(ui, (Rectangle) { 360 + WALLS_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 },
+        ORANGE, DARKBROWN, SLIDER_BRUSH, 0.5f);
+    create_slider(ui, (Rectangle) { 275 + FILES_BASE_LENGTH, Ny + 65 + FILES_BASE_HIGHT, 15, 110 },
+        ORANGE, DARKBROWN, SLIDER_SPEED, 0.5f);
+    create_slider(ui, (Rectangle) { 140 + Nx + TAU_BASE_LENGTH, 155 + TAU_BASE_HIGHT, 15, 110 },
+        ORANGE, DARKBROWN, SLIDER_TAU, 0.05825f);
 }

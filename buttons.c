@@ -1,14 +1,6 @@
 ﻿#include "buttons.h"
-#include "walls.h"
-#include "flow.h"
-#include "settings.h"
-#include "lights.h"
-#include "pauser.h"
 
-UIButtons ui_buttons = { 0 };
-static Vector2 mouse;
-
-Button create_button(Rectangle rect, float rect_roundness, Color rect_color, const char* text, Color text_color, ButtonID id) {
+Button create_button(UIButtons* ui_buttons, Rectangle rect, float rect_roundness, Color rect_color, const char* text, Color text_color, ButtonCallback callback, void* callback_data) {
     int font_size = 20;
     int text_width = MeasureText(text, font_size);
 
@@ -21,18 +13,19 @@ Button create_button(Rectangle rect, float rect_roundness, Color rect_color, con
     {
         rect, rect_roundness, rect_color,
         rect_color, rect_color,
-        text, text_pos, text_width, false, id, 0
+        text, text_pos, text_width, 0,
+        callback, callback_data
     };
 
-    if (ui_buttons.counter < MAX_BUTTONS) {
-        ui_buttons.buttons[ui_buttons.counter++] = button;
+    if (ui_buttons->counter < MAX_BUTTONS) {
+        ui_buttons->buttons[ui_buttons->counter++] = button;
     }
 
     return button;
 }
 
 void update_button(Button* button) {
-    button->pressed = false;
+    Vector2 mouse = GetMousePosition();
 
     if (button->press_timer > 0) {
         button->press_timer -= GetFrameTime();
@@ -42,7 +35,9 @@ void update_button(Button* button) {
     if (CheckCollisionPointRec(mouse, button->rect)) {
         button->target = Fade(button->base_color, 0.8f);
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-            button->pressed = true;
+            if (button->callback != NULL) {
+                button->callback(button->callback_data);
+            }
             button->press_timer = 1.0f;
             button->render_color = Fade(button->base_color, 0.4f);
         }
@@ -67,53 +62,63 @@ void draw_button(Button* button) {
     DrawTextEx(GetFontDefault(), button->text, button->text_pos, 20.0f, 2.0f, WHITE);
 }
 
-void ui_buttons_update(void) {
-    mouse = GetMousePosition();
-
-    for (int i = 0; i < ui_buttons.counter; i++) {
-        update_button(&ui_buttons.buttons[i]);
-
-        if (ui_buttons.buttons[i].pressed) {
-            switch (ui_buttons.buttons[i].id) {
-                case BUTTON_PAUSER:           switch_pauser(); break;
-                case BUTTON_RESTART_LIQUID:  init_F(); max_v = 1e-12; break;
-                case BUTTON_WALL_CIRCLE:     wall_type = WALL_CIRCLE; break;
-                case BUTTON_WALL_LINE:       wall_type = WALL_LINE; break;
-                case BUTTON_WALL_FREE:       wall_type = WALL_FREE; break;
-                case BUTTON_WALL_NONE:       wall_type = WALL_NONE; break;
-                case BUTTON_WALL_ERASER:       wall_type = WALL_ERASER; break;
-                case BUTTON_WALL_CLEAR:       init_walls(); break;
-                case BUTTON_LOAD_BMP:       load_walls_bmp(); break;
-                case BUTTON_LOAD_WALL:       load_walls_pwal(); break;
-                case BUTTON_SAVE_WALL:       save_walls_pwal(); break;
-                case BUTTON_LOAD_ALL:       load_all_psim(); break;
-                case BUTTON_SAVE_ALL:       save_all_psim(); break;
-                case BUTTON_EXPORT_CSV:       export_velocity_csv(); break;
-                case BUTTON_FIXATE_VELOCITY: if (fixate) { fixate = false; } else { fixate = true; } break;
-                case BUTTON_AREA_CLOGGED:       area_type = AREA_CLOGGED; enable_light(&light_system, 0); set_clogged_walls(); break;
-                case BUTTON_AREA_CYCLIC:       
-                    if (area_type == AREA_CLOGGED) { 
-                        remove_clogged_walls(); 
-                    } 
-                    area_type = AREA_CYCLIC; 
-                    enable_light(&light_system, 1); 
-                    break;
-                case BUTTON_AREA_OUTGOING:       
-                    if (area_type == AREA_CLOGGED) {
-                        remove_clogged_walls();
-                    }
-                    area_type = AREA_OUTGOING; 
-                    enable_light(&light_system, 2); 
-                    break;
-            }
-
-            ui_buttons.buttons[i].pressed = false;
-        }
+void ui_buttons_update(UIButtons* ui_buttons) {
+    for (int i = 0; i < ui_buttons->counter; i++) {
+        update_button(&ui_buttons->buttons[i]);
     }
 }
 
-void ui_buttons_draw(void) {
-    for (int i = 0; i < ui_buttons.counter; i++) {
-        draw_button(&ui_buttons.buttons[i]);
+void ui_buttons_draw(const UIButtons* ui_buttons) {
+    for (int i = 0; i < ui_buttons->counter; i++) {
+        draw_button(&ui_buttons->buttons[i]);
     }
+}
+
+void init_buttons(UIButtons* ui, Walls* ws, LBM* lbm, Pauser* pauser, Arrow* arrow, Settings* settings, LightSystem* light_system) {
+    static LoadAllData load_all;
+    static AreaTypeData area_type;
+    load_all = (LoadAllData){ ws, lbm, arrow, settings, light_system };
+    area_type = (AreaTypeData){ ws, settings, light_system };
+
+    create_button(ui, (Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, ORANGE, "CIRCLE", BLUE, cb_wall_circle, ws);
+    create_button(ui, (Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, ORANGE, "FREE", BLUE, cb_wall_free, ws);
+    create_button(ui, (Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, ORANGE, "LINE", BLUE, cb_wall_line, ws);
+    create_button(ui, (Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, BLUE, "ERASE", BLUE, cb_wall_eraser, ws);
+    create_button(ui, (Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, ORANGE, "NONE", BLUE, cb_wall_none, ws);
+    create_button(ui, (Rectangle) { 140 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, RED, "CLEAR", BLUE, cb_clear_walls, ws);
+
+    create_button(ui, (Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, BLUE, "BMP", BLUE, cb_load_bmp, ws);
+    create_button(ui, (Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 75 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, DARKGREEN, "LOAD", BLUE, cb_load_wall, ws);
+    create_button(ui, (Rectangle) { 250 + WALLS_BASE_LENGTH, Ny + 130 + WALLS_BASE_HIGHT, 80, 50 },
+        0.4f, DARKGREEN, "SAVE", BLUE, cb_save_wall, ws);
+
+    create_button(ui, (Rectangle) { Nx + 130, 35, 80, 80 },
+        0.4f, BROWN, "", BLUE, cb_pauser, pauser);
+    create_button(ui, (Rectangle) { Nx + 120, 180, 80, 50 },
+        0.4f, RED, "RESET", BLUE, cb_restart_liquid, lbm);
+
+    create_button(ui, (Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 },
+        0.4f, ORANGE, "CLOG", BLUE, cb_area_clogged, &area_type);
+    create_button(ui, (Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 },
+        0.4f, ORANGE, "CYCLIC", BLUE, cb_area_cyclic, &area_type);
+    create_button(ui, (Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT, 80, 50 },
+        0.4f, ORANGE, "OUT", BLUE, cb_area_outgoing, &area_type);
+
+    create_button(ui, (Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 },
+        0.4f, DARKGREEN, "LOAD", BLUE, cb_load_all, &load_all);
+    create_button(ui, (Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 },
+        0.4f, DARKGREEN, "SAVE", BLUE, cb_save_all, &load_all);
+
+    create_button(ui, (Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT, 80, 50 },
+        0.4f, BLUE, "SCV", BLUE, cb_export_csv, lbm);
+    create_button(ui, (Rectangle) { 10 + Nx + TAU_BASE_LENGTH, 230 + TAU_BASE_HIGHT, 50, 30 },
+        0.4f, BLUE, "FIX", BLUE, cb_fixate, settings);
 }

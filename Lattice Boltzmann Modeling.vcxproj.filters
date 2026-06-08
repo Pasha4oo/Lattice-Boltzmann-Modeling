@@ -51,6 +51,9 @@
     <ClCompile Include="arrow.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="buttons_callback.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -87,6 +90,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="arrow.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="buttons_callback.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
