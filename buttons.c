@@ -75,10 +75,8 @@ void ui_buttons_draw(const UIButtons* ui_buttons) {
 }
 
 void init_buttons(UIButtons* ui, Walls* ws, LBM* lbm, Pauser* pauser, Arrow* arrow, Settings* settings, LightSystem* light_system) {
-    static LoadAllData load_all;
-    static AreaTypeData area_type;
-    load_all = (LoadAllData){ ws, lbm, arrow, settings, light_system };
-    area_type = (AreaTypeData){ ws, settings, light_system };
+    ui->load_all = (LoadAllData){ ws, lbm, arrow, settings, light_system };
+    ui->area_type = (AreaTypeData){ ws, settings, light_system };
 
     create_button(ui, (Rectangle) { 50 + WALLS_BASE_LENGTH, Ny + 20 + WALLS_BASE_HIGHT, 80, 50 },
         0.4f, ORANGE, "CIRCLE", BLUE, cb_wall_circle, ws);
@@ -106,16 +104,16 @@ void init_buttons(UIButtons* ui, Walls* ws, LBM* lbm, Pauser* pauser, Arrow* arr
         0.4f, RED, "RESET", BLUE, cb_restart_liquid, lbm);
 
     create_button(ui, (Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 },
-        0.4f, ORANGE, "CLOG", BLUE, cb_area_clogged, &area_type);
+        0.4f, ORANGE, "CLOG", BLUE, cb_area_clogged, &ui->area_type);
     create_button(ui, (Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 },
-        0.4f, ORANGE, "CYCLIC", BLUE, cb_area_cyclic, &area_type);
+        0.4f, ORANGE, "CYCLIC", BLUE, cb_area_cyclic, &ui->area_type);
     create_button(ui, (Rectangle) { 75 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT, 80, 50 },
-        0.4f, ORANGE, "OUT", BLUE, cb_area_outgoing, &area_type);
+        0.4f, ORANGE, "OUT", BLUE, cb_area_outgoing, &ui->area_type);
 
     create_button(ui, (Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 20 + FILES_BASE_HIGHT, 80, 50 },
-        0.4f, DARKGREEN, "LOAD", BLUE, cb_load_all, &load_all);
+        0.4f, DARKGREEN, "LOAD", BLUE, cb_load_all, &ui->load_all);
     create_button(ui, (Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 75 + FILES_BASE_HIGHT, 80, 50 },
-        0.4f, DARKGREEN, "SAVE", BLUE, cb_save_all, &load_all);
+        0.4f, DARKGREEN, "SAVE", BLUE, cb_save_all, &ui->load_all);
 
     create_button(ui, (Rectangle) { 165 + FILES_BASE_LENGTH, Ny + 130 + FILES_BASE_HIGHT, 80, 50 },
         0.4f, BLUE, "SCV", BLUE, cb_export_csv, lbm);

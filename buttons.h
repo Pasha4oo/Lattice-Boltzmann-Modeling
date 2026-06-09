@@ -28,7 +28,6 @@ typedef struct Button {
 	Vector2 text_pos;
 	float text_width;
 	float press_timer;
-
 	ButtonCallback callback;
 	void* callback_data;
 } Button;
@@ -36,6 +35,8 @@ typedef struct Button {
 typedef struct UIButtons {
 	Button buttons[MAX_BUTTONS];
 	int counter;
+	LoadAllData load_all;
+	AreaTypeData area_type;
 } UIButtons;
 
 Button create_button(UIButtons* ui_buttons, Rectangle rect, float rect_roundness, Color rect_color, 
